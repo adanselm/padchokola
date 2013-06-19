@@ -19,6 +19,8 @@
  #include "controls.h"
  #include "display_7seg.h"
  
+ #define ACCEL_TIME_DELTA 200
+ 
  enum MidiType 
 {
     InvalidType           = 0x00,    ///< For notifying errors
@@ -47,7 +49,7 @@ const int gMidiClockPpqn = 24;
 volatile unsigned long gEventTime = 0;
 volatile MidiType gNextEvent = InvalidType;
 //
-float gBpm = 120.0f;
+float gBpm = 136.5f; //120.0f;
 float gOldBpm = 0.0f;
 const int gMinBpm = 20;
 const int gMaxBpm = 999;
@@ -138,7 +140,10 @@ long int getClockPeriodInMicrosec(const int iBpmTimesTen)
 
 void setBpmFromEncoder()
 {
-//   ledDisplay.setNumber(encoder.readValue());
+  const unsigned long currentTime = millis();
+  const int timeDiff = currentTime - gLastUpdate;
+  
+//  ledDisplay.setNumber(encoder.readValue());
   gBpm = encoder.readValue() / 10.0;
   
   if(gBpm != gOldBpm)
@@ -149,18 +154,18 @@ void setBpmFromEncoder()
     ledDisplay.setNumber(gBpm);
     
     // Short update: accelerate encoder
-    const unsigned long currentTime = millis();
-//    const int timeDiff = currentTime - gLastUpdate;
-//    if(timeDiff < 350)
-//    {
-//      // increase 1 bpm after the other, with a limit of 10
-//      encoder.setStep( min(encoder.getStep() + 10, 100) );
-//    }
-//    else
-//    {
-//      encoder.setStep(1);
-//    }
+    if(timeDiff <= ACCEL_TIME_DELTA)
+    {
+      // increase rate 0.5 bpm after the other, with a limit of 10
+      encoder.setStep( min(encoder.getStep() + 5, 100) );
+    }
     gLastUpdate = currentTime;
+  }
+  
+  // No updates in a while: decelerate
+  if(timeDiff > ACCEL_TIME_DELTA)
+  {
+    encoder.setStep(1);
   }
 }
 
