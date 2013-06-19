@@ -44,17 +44,18 @@
 
 // Midi Stuff
 const int gMidiClockPpqn = 24;
-float gBpm = 60.0;
-const int gMinBpm = 20;
-const int gMaxBpm = 999;
 volatile unsigned long gEventTime = 0;
 volatile MidiType gNextEvent = InvalidType;
-
 //
-unsigned int gPos = 0, gOldPos = 0;
+float gBpm = 120.0f;
+float gOldBpm = 0.0f;
+const int gMinBpm = 20;
+const int gMaxBpm = 999;
+unsigned long gLastUpdate = 0;
+//
 
 ////////////////////////// Main program
-Encoder encoder(3);
+Encoder encoder(3, gMinBpm*10, gMaxBpm*10, gBpm*10);
 Controls controls(5, 6);
 Display7Seg ledDisplay(4 /* data */, 9 /* latch */, 10 /* clock */);
 
@@ -70,19 +71,13 @@ void setup()
 //  Serial.begin(9600);
   Timer1.initialize( getClockPeriodInMicrosec(gBpm*10) );
   Timer1.attachInterrupt(doSendMidiClock);
+  
+  gLastUpdate = millis();
 }
 
 void loop()
 {
-  gPos = encoder.readValue();
-  if(gPos != gOldPos)
-  {
-    gOldPos = gPos;
-    
-    gBpm = map(gPos, encoder.getMinVal(), encoder.getMaxVal(), gMinBpm*10, gMaxBpm*10) / 10.0;
-    Timer1.setPeriod( getClockPeriodInMicrosec(gBpm*10) );
-    ledDisplay.setNumber(gBpm);
-  }
+  setBpmFromEncoder();
   
   // Controls
   const int shouldPlay = controls.readPlayBtn();
@@ -139,5 +134,33 @@ long int getClockPeriodInMicrosec(const int iBpmTimesTen)
 {
   const long int midiClockPerMinute = gMidiClockPpqn * iBpmTimesTen;
   return (double)(1000000*60*10 / midiClockPerMinute) + 0.5f;
+}
+
+void setBpmFromEncoder()
+{
+//   ledDisplay.setNumber(encoder.readValue());
+  gBpm = encoder.readValue() / 10.0;
+  
+  if(gBpm != gOldBpm)
+  {
+    gOldBpm = gBpm;
+    
+    Timer1.setPeriod( getClockPeriodInMicrosec(gBpm*10) );
+    ledDisplay.setNumber(gBpm);
+    
+    // Short update: accelerate encoder
+    const unsigned long currentTime = millis();
+//    const int timeDiff = currentTime - gLastUpdate;
+//    if(timeDiff < 350)
+//    {
+//      // increase 1 bpm after the other, with a limit of 10
+//      encoder.setStep( min(encoder.getStep() + 10, 100) );
+//    }
+//    else
+//    {
+//      encoder.setStep(1);
+//    }
+    gLastUpdate = currentTime;
+  }
 }
 

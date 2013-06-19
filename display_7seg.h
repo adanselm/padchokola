@@ -18,6 +18,7 @@ class Display7Seg
   void display();
   
   void setNumber(const float numberToDisplay);
+  void setNumber(const unsigned int numberToDisplay);
   
  private:
   void setNumber(const byte digit1, const byte digit2, const byte digit3, const byte digit4);

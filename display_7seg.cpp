@@ -48,7 +48,12 @@ void Display7Seg::display()
 
 void Display7Seg::setNumber(const float numberToDisplay)
 {
-  const int number = numberToDisplay * 10;
+  const unsigned int number = numberToDisplay * 10;
+  setNumber(number);
+}
+
+void Display7Seg::setNumber(const unsigned int number)
+{
   const byte digit1 = number / 1000;
   const byte digit2 = (number - digit1 * 1000) / 100 ;
   const byte digit3 = (number - digit1 * 1000 - digit2 * 100) / 10;
