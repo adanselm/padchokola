@@ -21,7 +21,7 @@
  #define ACCEL_TIME_DELTA 200
 
 //
-float gBpm = 136.5f; //120.0f;
+float gBpm = 0.0f; //120.0f;
 float gOldBpm = 0.0f;
 const int gMinBpm = 20;
 const int gMaxBpm = 900;
@@ -40,7 +40,7 @@ void setup()
   encoder.setup();
   controls.setup();
   ledDisplay.setup();
-  midi.setup(gBpm);
+  midi.setup(gBpm); // a Value of 0 bpm makes MidiProxy use MTC instead of Midi Clock.
 
   gLastUpdate = millis();
 }

@@ -10,14 +10,21 @@ public:
   ~MidiProxy();
 
   // To be called on main program setup
+  // A value of 0 initializes MTC mode instead of default Midi Clock
   void setup(const float iInitialBpm);
 
+  // Only active in Midi Clock mode
   void setBpm(const float iBpm);
+
+  static bool setMode(bool useMTC);
+  static bool isModeMTC();
+  
   void sendPlay();
   void sendStop();
   
   static void doSendMidiClock();
-  
+  static void doSendMTC();
+    
 private:
   enum MidiType 
   {
@@ -42,11 +49,54 @@ private:
     SystemReset           = 0xFF,    ///< System Real Time - System Reset
   };
   
+  enum MTCQuarterFrameType
+  {
+    FramesLow             = 0x00,
+    FramesHigh            = 0x10,
+    SecondsLow            = 0x20,
+    SecondsHigh           = 0x30,
+    MinutesLow            = 0x40,
+    MinutesHigh           = 0x50,
+    HoursLow              = 0x60,
+    HoursHighAndSmpte     = 0x70,
+  };
+  
+  enum SmpteMask
+  {
+    Frames24              = B0000,
+    Frames25              = B0010,
+    Frames30drop          = B0100,
+    Frames30              = B0110,
+  };
+  
+  struct Playhead
+  {
+    byte frames;
+    byte seconds;
+    byte minutes;
+    byte hours;
+  };
+  
 private:
-  // Midi Stuff
+  static void sendMTCQuarterFrame(int index);
+  static void updatePlayhead();
+  static void resetPlayhead();
+  static void setTimer(const double frequency);
+  
+private:
+  // Midi Clock Stuff
   static const int mMidiClockPpqn;
   static volatile unsigned long mEventTime;
   static volatile MidiType mNextEvent;
+  static int mPrescaler;
+  static unsigned char mSelectBits;
+  
+  // MTC stuff
+  static bool mUseMTC;
+  static const SmpteMask mCurrentSmpteType;
+  static volatile Playhead mPlayhead;
+  static volatile int mCurrentQFrame;
+  static const MTCQuarterFrameType mMTCQuarterFrameTypes[8];
 };
 
 #endif
