@@ -52,7 +52,7 @@ void setup()
   controls.setup();
   ledDisplay.setup();
   midi.setup();
-  pinMode(8, OUTPUT);
+  
   checkSelector();
 
   gLastUpdate = millis();
@@ -103,29 +103,39 @@ Controls::SelectorMode checkSelector()
 void checkButtons(const Controls::SelectorMode currentMode)
 {
   // Controls
-  const Controls::ButtonMode btn1 = Controls::ButtonOff;//controls.readBtn1();
-  const Controls::ButtonMode btn2 = Controls::ButtonOff;//controls.readBtn2();
+  const Controls::ButtonMode btn1 = controls.readBtn1();
+  const Controls::ButtonMode btn2 = controls.readBtn2();
   const Controls::ButtonMode btn3 = controls.readBtn3();
-  
-  digitalWrite(8, LOW);
 
   if( btn1 == Controls::ButtonShort )
   {
-    digitalWrite(8, HIGH);
     if( currentMode == Controls::SelectorNone )
       midi.sendDefaultControlChangeOn(BTN1_SHORT_CC);
     else
       midi.sendPlay();
   }
+  else if( btn1 == Controls::ButtonLong )
+  {
+    if( currentMode == Controls::SelectorNone )
+      midi.sendDefaultControlChangeOn(BTN1_LONG_CC);
+    else
+      midi.sendStop();
+  }
   else if( btn2 == Controls::ButtonShort )
   {
-    digitalWrite(8, HIGH);
     midi.sendDefaultControlChangeOn(BTN2_SHORT_CC);
+  }
+  else if( btn2 == Controls::ButtonLong )
+  {
+    midi.sendDefaultControlChangeOn(BTN2_LONG_CC);
   }
   else if( btn3 == Controls::ButtonShort )
   {
-    digitalWrite(8, HIGH);
     midi.sendDefaultControlChangeOn(BTN3_SHORT_CC);
+  }
+  else if( btn3 == Controls::ButtonLong )
+  {
+    midi.sendDefaultControlChangeOn(BTN3_LONG_CC);
   }
 }
 

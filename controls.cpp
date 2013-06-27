@@ -4,8 +4,8 @@
 #define SELECTOR_LOW_LIMIT 340
 #define SELECTOR_HIGH_LIMIT 680
 
-#define SHORT_PRESS 300
-#define LONG_PRESS_DELTA 10
+#define SHORT_PRESS 350
+#define LONG_PRESS 1500
 
 Controls::Controls(const int btn1Pin, const int btn2Pin, const int btn3Pin,
                    const int /* unusedPin */, const int selectorPin)
@@ -60,9 +60,17 @@ const Controls::SelectorMode Controls::readSelector()
 const Controls::ButtonMode Controls::readPinFiltered(const int pinToRead)
 {
   const int duration = readPinDuration(pinToRead);
+  const bool isOff = (digitalRead(pinToRead) == HIGH);
   
-  if( duration > SHORT_PRESS )
+  if( !isOff && duration > LONG_PRESS )
   {
+    // Give us some time before another press is possible:
+    mCounter = - SHORT_PRESS;
+    return ButtonLong;
+  }
+  else if( isOff && duration > SHORT_PRESS )
+  {
+    // Button is released and it was not a long press => short press
     mCounter = 0;
     return ButtonShort;
   }
