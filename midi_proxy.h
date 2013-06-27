@@ -6,21 +6,31 @@
 class MidiProxy
 {
 public:
+  enum MidiSynchro
+  {
+    SynchroNone = 0,
+    SynchroClock,
+    SynchroMTC
+  };
+  
   MidiProxy();
   ~MidiProxy();
 
   // To be called on main program setup
-  // A value of 0 initializes MTC mode instead of default Midi Clock
-  void setup(const float iInitialBpm);
+  void setup();
 
   // Only active in Midi Clock mode
   void setBpm(const float iBpm);
 
-  static bool setMode(bool useMTC);
-  static bool isModeMTC();
+  static void setMode(MidiSynchro newMode);
+  static MidiSynchro getMode();
   
   void sendPlay();
   void sendStop();
+  void sendContinue();
+  
+  /** Sends a CC on channel 1, with a value of 127 */
+  void sendDefaultControlChangeOn(byte cc);
   
   static void doSendMidiClock();
   static void doSendMTC();
@@ -82,8 +92,11 @@ private:
   static void updatePlayhead();
   static void resetPlayhead();
   static void setTimer(const double frequency);
+  void sendControlChange(byte channel, byte cc, byte value);
   
 private:
+  static MidiSynchro mMode;
+  
   // Midi Clock Stuff
   static const int mMidiClockPpqn;
   static volatile unsigned long mEventTime;
@@ -92,7 +105,6 @@ private:
   static unsigned char mSelectBits;
   
   // MTC stuff
-  static bool mUseMTC;
   static const SmpteMask mCurrentSmpteType;
   static volatile Playhead mPlayhead;
   static volatile int mCurrentQFrame;

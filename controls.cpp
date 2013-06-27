@@ -1,9 +1,18 @@
 #include "controls.h"
 #include "Arduino.h"
 
-Controls::Controls(const int playStopBtnPin, const int recBtnPin)
+#define SELECTOR_LOW_LIMIT 340
+#define SELECTOR_HIGH_LIMIT 680
+
+#define SHORT_PRESS 300
+#define LONG_PRESS_DELTA 10
+
+Controls::Controls(const int btn1Pin, const int btn2Pin, const int btn3Pin,
+                   const int /* unusedPin */, const int selectorPin)
 : 
-mPlayStopBtnPin(playStopBtnPin), mRecBtnPin(recBtnPin), mLastKeyPressTime(0)
+mBtn1Pin(btn1Pin), mBtn2Pin(btn2Pin), mBtn3Pin(btn3Pin),
+mSelectorPin(selectorPin), mCounter(0),
+mLastKeyPressTime(0)
 {
 }
 
@@ -12,30 +21,66 @@ Controls::~Controls() {
 
 void Controls::setup()
 {
-  pinMode(mPlayStopBtnPin, INPUT);
-  pinMode(mRecBtnPin, INPUT);
-  digitalWrite(mPlayStopBtnPin, HIGH);  // turn on internal pull-up
-  digitalWrite(mRecBtnPin, HIGH);  // turn on internal pull-up
+  pinMode(mBtn1Pin, INPUT);
+  pinMode(mBtn2Pin, INPUT);
+  pinMode(mBtn3Pin, INPUT);
+  digitalWrite(mBtn1Pin, HIGH);  // turn on internal pull-up
+  digitalWrite(mBtn2Pin, HIGH);  // turn on internal pull-up
+  digitalWrite(mBtn3Pin, HIGH);  // turn on internal pull-up
 }
 
-const int Controls::readPlayBtn()
+const Controls::ButtonMode Controls::readBtn1()
 {
-  return readPinFiltered(mPlayStopBtnPin, 100);
+  return readPinFiltered(mBtn1Pin);
 }
 
-const int Controls::readRecBtn()
+const Controls::ButtonMode Controls::readBtn2()
 {
-  return readPinFiltered(mRecBtnPin, 100);
+  return readPinFiltered(mBtn2Pin);
 }
 
-const int Controls::readPinFiltered(const int pinToRead, const int delayTime)
+const Controls::ButtonMode Controls::readBtn3()
+{
+  return readPinFiltered(mBtn3Pin);
+}
+
+const Controls::SelectorMode Controls::readSelector()
+{
+  const int pinValue = analogRead(mSelectorPin);
+  
+  if( pinValue < SELECTOR_LOW_LIMIT )
+    return SelectorNone;
+    
+  if( pinValue > SELECTOR_HIGH_LIMIT )
+    return SelectorSecond;
+    
+  return SelectorFirst;
+}
+
+const Controls::ButtonMode Controls::readPinFiltered(const int pinToRead)
+{
+  const int duration = readPinDuration(pinToRead);
+  
+  if( duration > SHORT_PRESS )
+  {
+    mCounter = 0;
+    return ButtonShort;
+  }
+    
+  return ButtonOff;
+}
+
+const int Controls::readPinDuration(const int pinToRead)
 {
   const unsigned long currentTime = millis();
-  if( (currentTime - mLastKeyPressTime) >= delayTime )
+  if( digitalRead(pinToRead) == LOW )
   {
+    ++mCounter;
     mLastKeyPressTime = currentTime;
-    return digitalRead(pinToRead);
   }
-  return HIGH;
+  else if( (currentTime - mLastKeyPressTime) > 4 )
+    mCounter = 0;
+
+  return mCounter;
 }
 

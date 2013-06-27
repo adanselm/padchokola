@@ -8,15 +8,13 @@ MidiProxy::~MidiProxy()
 {
 }
 
-void MidiProxy::setup(const float iInitialBpm)
+void MidiProxy::setup()
 {
   // Set MIDI baud rate:
   Serial.begin(31250);
   
-  if( iInitialBpm > 0.0f )
-    setBpm(iInitialBpm);
-  else
-    setMode(true);
+  // Timer needed in setup even if no synchro occurring
+  setTimer(1.0f);
 }
 
 void MidiProxy::doSendMidiClock()
@@ -54,6 +52,13 @@ void MidiProxy::sendStop()
   interrupts();
 }
 
+void MidiProxy::sendContinue()
+{
+  noInterrupts();
+  mNextEvent = Continue;
+  interrupts();
+}
+
 void MidiProxy::doSendMTC()
 {  
   if( mNextEvent != Stop )
@@ -69,19 +74,22 @@ void MidiProxy::doSendMTC()
   }
 }
 
-bool MidiProxy::setMode(bool useMTC)
+void MidiProxy::setMode(MidiProxy::MidiSynchro newMode)
 {
-  mUseMTC = useMTC;
-  
-  if(mUseMTC)
+  if( mMode != newMode )
   {
-    setTimer(24 * 4);
+    mMode = newMode;
+  
+    if(mMode == MidiProxy::SynchroMTC)
+    {
+      setTimer(24 * 4);
+    }
   }
 }
 
-bool MidiProxy::isModeMTC()
+MidiProxy::MidiSynchro MidiProxy::getMode()
 {
-  return mUseMTC;
+  return mMode;
 }
 
 void MidiProxy::sendMTCQuarterFrame(int index)
@@ -119,6 +127,18 @@ void MidiProxy::sendMTCQuarterFrame(int index)
   Serial.write( mMTCQuarterFrameTypes[index] | MTCData );
 }
 
+void MidiProxy::sendControlChange(byte channel, byte cc, byte value)
+{
+  Serial.write(ControlChange | ((channel - 1) & 0x0F));
+  Serial.write(cc & 0x7F);
+  Serial.write(value & 0x7F);
+}
+
+void MidiProxy::sendDefaultControlChangeOn(byte cc)
+{
+  sendControlChange(1, cc, 127);
+}
+
 // To be called every two frames (so once a complete cycle of quarter frame messages have passed)
 void MidiProxy::updatePlayhead()
 {
@@ -142,7 +162,7 @@ void MidiProxy::resetPlayhead()
 
 void MidiProxy::setBpm(const float iBpm)
 {
-  if( ! isModeMTC() )
+  if( getMode() == SynchroClock )
   {
     const double midiClockPerSec = mMidiClockPpqn * iBpm / 60;
     setTimer(midiClockPerSec);
@@ -185,9 +205,9 @@ void MidiProxy::setTimer(const double frequency)
 
 ISR(TIMER1_COMPA_vect) //timer1 interrupt
 {
-  if( MidiProxy::isModeMTC() )
+  if( MidiProxy::getMode() == MidiProxy::SynchroMTC )
     MidiProxy::doSendMTC();
-  else
+  else if( MidiProxy::getMode() == MidiProxy::SynchroClock )
     MidiProxy::doSendMidiClock();
 }
 
@@ -203,4 +223,4 @@ volatile MidiProxy::Playhead MidiProxy::mPlayhead = MidiProxy::Playhead();
 volatile int MidiProxy::mCurrentQFrame = 0;
 const MidiProxy::MTCQuarterFrameType MidiProxy::mMTCQuarterFrameTypes[8] = { FramesLow, FramesHigh, SecondsLow, SecondsHigh,
                                                                              MinutesLow, MinutesHigh, HoursLow, HoursHighAndSmpte };
-bool MidiProxy::mUseMTC = false;
+MidiProxy::MidiSynchro MidiProxy::mMode = MidiProxy::SynchroNone;

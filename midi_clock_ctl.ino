@@ -13,12 +13,19 @@
  by Adrien Anselme
  
  */
- #include "encoder.h"
- #include "controls.h"
- #include "display_7seg.h"
- #include "midi_proxy.h"
+#include "encoder.h"
+#include "controls.h"
+#include "display_7seg.h"
+#include "midi_proxy.h"
  
- #define ACCEL_TIME_DELTA 200
+#define ACCEL_TIME_DELTA 200
+
+#define BTN1_SHORT_CC 24
+#define BTN1_LONG_CC 23
+#define BTN2_SHORT_CC 25
+#define BTN2_LONG_CC 26
+#define BTN3_SHORT_CC 27
+#define BTN3_LONG_CC 28
 
 //
 float gBpm = 120.0f;
@@ -26,13 +33,17 @@ float gOldBpm = 0.0f;
 const int gMinBpm = 20;
 const int gMaxBpm = 900;
 unsigned long gLastUpdate = 0;
+Controls::SelectorMode gLastSelectorMode = Controls::SelectorNone;
 //
 
 ////////////////////////// Main program
 Encoder encoder(3, gMinBpm*10, gMaxBpm*10, gBpm*10);
-Controls controls(5, 6);
-Display7Seg ledDisplay(4 /* data */, 9 /* latch */, 10 /* clock */);
+Controls controls(5, 6, 7, 8, A0);
+Display7Seg ledDisplay(4 /* data */, 10 /* latch */, 9 /* clock */);
 MidiProxy midi;
+
+Controls::SelectorMode checkSelector();
+void checkButtons(const Controls::SelectorMode currentMode);
 
 void setup()
 {
@@ -40,29 +51,82 @@ void setup()
   encoder.setup();
   controls.setup();
   ledDisplay.setup();
-  midi.setup(gBpm); // a Value of 0 bpm makes MidiProxy use MTC instead of Midi Clock.
+  midi.setup();
+  pinMode(8, OUTPUT);
+  checkSelector();
 
   gLastUpdate = millis();
 }
 
 void loop()
 {
-  setBpmFromEncoder();
+  const Controls::SelectorMode currentMode = checkSelector();
   
-  // Controls
-  const int shouldPlay = controls.readPlayBtn();
-  const int shouldStop = controls.readRecBtn();
-  if( shouldStop == LOW )
-  {
-    midi.sendStop();
-  }
-  if( shouldPlay == LOW )
-  {
-    midi.sendPlay();
-  }
+  setBpmFromEncoder();  
+  checkButtons(currentMode);
   
   // Display
   ledDisplay.display();
+}
+
+/// Read selector and apply matching sync mode
+Controls::SelectorMode checkSelector()
+{
+  const Controls::SelectorMode currentMode = controls.readSelector();
+  
+  if( currentMode == gLastSelectorMode )
+    return gLastSelectorMode;
+    
+  gLastSelectorMode = currentMode;
+  switch( currentMode )
+  {
+    case Controls::SelectorNone:
+    {
+      midi.setMode(MidiProxy::SynchroNone);
+      return Controls::SelectorNone;
+    }
+    case Controls::SelectorFirst:
+    {
+      midi.setMode(MidiProxy::SynchroClock);
+      midi.setBpm(gBpm);
+      return Controls::SelectorFirst;
+    }
+    case Controls::SelectorSecond:
+    {
+      midi.setMode(MidiProxy::SynchroMTC);
+      return Controls::SelectorSecond;
+    }
+  }
+  return Controls::SelectorNone;
+}
+
+void checkButtons(const Controls::SelectorMode currentMode)
+{
+  // Controls
+  const Controls::ButtonMode btn1 = Controls::ButtonOff;//controls.readBtn1();
+  const Controls::ButtonMode btn2 = Controls::ButtonOff;//controls.readBtn2();
+  const Controls::ButtonMode btn3 = controls.readBtn3();
+  
+  digitalWrite(8, LOW);
+
+  if( btn1 == Controls::ButtonShort )
+  {
+    digitalWrite(8, HIGH);
+    if( currentMode == Controls::SelectorNone )
+      midi.sendDefaultControlChangeOn(BTN1_SHORT_CC);
+    else
+      midi.sendPlay();
+  }
+  else if( btn2 == Controls::ButtonShort )
+  {
+    digitalWrite(8, HIGH);
+    midi.sendDefaultControlChangeOn(BTN2_SHORT_CC);
+  }
+  else if( btn3 == Controls::ButtonShort )
+  {
+    digitalWrite(8, HIGH);
+    midi.sendDefaultControlChangeOn(BTN3_SHORT_CC);
+  }
 }
 
 void setBpmFromEncoder()
