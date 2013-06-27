@@ -9,11 +9,17 @@
 
 Controls::Controls(const int btn1Pin, const int btn2Pin, const int btn3Pin,
                    const int /* unusedPin */, const int selectorPin)
-: 
-mBtn1Pin(btn1Pin), mBtn2Pin(btn2Pin), mBtn3Pin(btn3Pin),
-mSelectorPin(selectorPin), mCounter(0),
-mLastKeyPressTime(0)
+: mSelectorPin(selectorPin)
 {
+  mBtnPin[0] = btn1Pin;
+  mBtnPin[1] = btn2Pin;
+  mBtnPin[2] = btn3Pin;
+  mCounter[0] = 0;
+  mCounter[1] = 0;
+  mCounter[2] = 0;
+  mLastKeyPressTime[0] = 0;
+  mLastKeyPressTime[1] = 0;
+  mLastKeyPressTime[2] = 0;
 }
 
 Controls::~Controls() {
@@ -21,27 +27,26 @@ Controls::~Controls() {
 
 void Controls::setup()
 {
-  pinMode(mBtn1Pin, INPUT);
-  pinMode(mBtn2Pin, INPUT);
-  pinMode(mBtn3Pin, INPUT);
-  digitalWrite(mBtn1Pin, HIGH);  // turn on internal pull-up
-  digitalWrite(mBtn2Pin, HIGH);  // turn on internal pull-up
-  digitalWrite(mBtn3Pin, HIGH);  // turn on internal pull-up
+  for( int i = 0; i < 3; ++i )
+  {
+    pinMode(mBtnPin[i], INPUT);
+    digitalWrite(mBtnPin[i], HIGH);  // turn on internal pull-up
+  }
 }
 
 const Controls::ButtonMode Controls::readBtn1()
 {
-  return readPinFiltered(mBtn1Pin);
+  return readPinFiltered(0);
 }
 
 const Controls::ButtonMode Controls::readBtn2()
 {
-  return readPinFiltered(mBtn2Pin);
+  return readPinFiltered(1);
 }
 
 const Controls::ButtonMode Controls::readBtn3()
 {
-  return readPinFiltered(mBtn3Pin);
+  return readPinFiltered(2);
 }
 
 const Controls::SelectorMode Controls::readSelector()
@@ -57,38 +62,38 @@ const Controls::SelectorMode Controls::readSelector()
   return SelectorFirst;
 }
 
-const Controls::ButtonMode Controls::readPinFiltered(const int pinToRead)
+const Controls::ButtonMode Controls::readPinFiltered(const int btnIndex)
 {
-  const int duration = readPinDuration(pinToRead);
-  const bool isOff = (digitalRead(pinToRead) == HIGH);
+  const int duration = readPinDuration(btnIndex);
+  const bool isOff = (digitalRead( mBtnPin[btnIndex] ) == HIGH);
   
   if( !isOff && duration > LONG_PRESS )
   {
     // Give us some time before another press is possible:
-    mCounter = - SHORT_PRESS;
+    mCounter[btnIndex] = - SHORT_PRESS;
     return ButtonLong;
   }
   else if( isOff && duration > SHORT_PRESS )
   {
     // Button is released and it was not a long press => short press
-    mCounter = 0;
+    mCounter[btnIndex] = 0;
     return ButtonShort;
   }
     
   return ButtonOff;
 }
 
-const int Controls::readPinDuration(const int pinToRead)
+const int Controls::readPinDuration(const int btnIndex)
 {
   const unsigned long currentTime = millis();
-  if( digitalRead(pinToRead) == LOW )
+  if( digitalRead( mBtnPin[btnIndex] ) == LOW )
   {
-    ++mCounter;
-    mLastKeyPressTime = currentTime;
+    ++mCounter[btnIndex];
+    mLastKeyPressTime[btnIndex] = currentTime;
   }
-  else if( (currentTime - mLastKeyPressTime) > 4 )
-    mCounter = 0;
+  else if( (currentTime - mLastKeyPressTime[btnIndex]) > 4 )
+    mCounter[btnIndex] = 0;
 
-  return mCounter;
+  return mCounter[btnIndex];
 }
 

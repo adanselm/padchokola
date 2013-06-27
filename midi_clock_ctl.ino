@@ -34,6 +34,8 @@ const int gMinBpm = 20;
 const int gMaxBpm = 900;
 unsigned long gLastUpdate = 0;
 Controls::SelectorMode gLastSelectorMode = Controls::SelectorNone;
+bool gIsPlaying = false;
+bool gShouldReset = true;
 //
 
 ////////////////////////// Main program
@@ -100,6 +102,42 @@ Controls::SelectorMode checkSelector()
   return Controls::SelectorNone;
 }
 
+void doButton1Short(const Controls::SelectorMode currentMode)
+{
+  if( currentMode == Controls::SelectorNone )
+  {
+    midi.sendDefaultControlChangeOn(BTN1_SHORT_CC);
+  }
+  else if(gIsPlaying)
+  {
+    midi.sendStop();
+    gIsPlaying = false;
+  }
+  else
+  {
+    if( gShouldReset )
+    {
+      midi.sendPlay();
+      gShouldReset = false;
+    }
+    else
+      midi.sendContinue();
+        
+    gIsPlaying = true;
+  }
+}
+
+void doButton1Long(const Controls::SelectorMode currentMode)
+{
+  if( currentMode == Controls::SelectorNone )
+    midi.sendDefaultControlChangeOn(BTN1_LONG_CC);
+  else
+  {
+    midi.sendStop();
+    gShouldReset = true;
+  }
+}
+
 void checkButtons(const Controls::SelectorMode currentMode)
 {
   // Controls
@@ -109,17 +147,11 @@ void checkButtons(const Controls::SelectorMode currentMode)
 
   if( btn1 == Controls::ButtonShort )
   {
-    if( currentMode == Controls::SelectorNone )
-      midi.sendDefaultControlChangeOn(BTN1_SHORT_CC);
-    else
-      midi.sendPlay();
+    doButton1Short(currentMode);
   }
   else if( btn1 == Controls::ButtonLong )
   {
-    if( currentMode == Controls::SelectorNone )
-      midi.sendDefaultControlChangeOn(BTN1_LONG_CC);
-    else
-      midi.sendStop();
+    doButton1Long(currentMode);
   }
   else if( btn2 == Controls::ButtonShort )
   {

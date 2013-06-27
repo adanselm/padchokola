@@ -31,13 +31,14 @@ class Controls
   const SelectorMode readSelector();
 
  private:
-  const ButtonMode readPinFiltered(const int pinToRead);
-  const int readPinDuration(const int pinToRead);
+  const ButtonMode readPinFiltered(const int btnIndex);
+  const int readPinDuration(const int btnIndex);
   
  private:
-  const int mBtn1Pin, mBtn2Pin, mBtn3Pin, mSelectorPin;
-  int mCounter;
-  unsigned long mLastKeyPressTime;
+  int mBtnPin[3];
+  const int mSelectorPin;
+  int mCounter[3];
+  unsigned long mLastKeyPressTime[3];
 };
 
 #endif
