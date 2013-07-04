@@ -8,7 +8,7 @@
  * digital pin 2 connected to rotary encoder pin 1 (required for interruption)
  * encoder pin 2 connected to ground
  * encoder pin 3 connected to any digital pin (e.g. digital pin 3)
-                                                                                  
+ 
  created 3 Jun 2013
  by Adrien Anselme
  
@@ -17,7 +17,7 @@
 #include "controls.h"
 #include "display_7seg.h"
 #include "midi_proxy.h"
- 
+
 #define ACCEL_TIME_DELTA 200
 
 #define BTN1_SHORT_CC 24
@@ -27,178 +27,215 @@
 #define BTN3_SHORT_CC 27
 #define BTN3_LONG_CC 28
 
-//
-float gBpm = 120.0f;
-float gOldBpm = 0.0f;
-const int gMinBpm = 20;
-const int gMaxBpm = 900;
-unsigned long gLastUpdate = 0;
-Controls::SelectorMode gLastSelectorMode = Controls::SelectorNone;
-bool gIsPlaying = false;
-bool gShouldReset = true;
-//
+class Application
+{
+public:
+  Application(const float defaultBpm, const float minBpm, const float maxBpm,
+  const int encoderPin, const int btn1Pin, const int btn2Pin,
+  const int btn3Pin, const int btn4Pin, const int selectorPin,
+  const int ledDataPin, const int ledLatchPin, const int ledClockPin)
+: 
+    mBpm(defaultBpm), mOldBpm(0.0f), mMinBpm(minBpm), mMaxBpm(maxBpm),
+    mLastUpdate(0), mLastSelectorMode(Controls::SelectorNone),
+    mIsPlaying(false), mShouldReset(true),
+    mEncoder(encoderPin, mMinBpm*10, mMaxBpm*10, mBpm*10),
+    mControls(btn1Pin, btn2Pin, btn3Pin, btn4Pin, selectorPin),
+    mLedDisplay(ledDataPin, ledLatchPin, ledClockPin)
+    {
+    }
+
+  ~Application()
+  {
+  }
+
+  void setup()
+  {
+    // Buttons
+    mEncoder.setup();
+    mControls.setup();
+    mLedDisplay.setup();
+    mMidi.setup();
+
+    checkSelector();
+
+    mLastUpdate = millis();
+  }
+
+  void loop()
+  {
+    const Controls::SelectorMode currentMode = checkSelector();
+
+    setBpmFromEncoder();  
+    checkButtons(currentMode);
+
+    // Display
+    mLedDisplay.display();
+  }
+
+private:
+  float mBpm;
+  float mOldBpm;
+  const int mMinBpm;
+  const int mMaxBpm;
+  unsigned long mLastUpdate;
+  Controls::SelectorMode mLastSelectorMode;
+  bool mIsPlaying;
+  bool mShouldReset;
+  //
+  Encoder mEncoder;
+  Controls mControls;
+  Display7Seg mLedDisplay;
+  MidiProxy mMidi;
+
+private:
+  /// Read selector and apply matching sync mode
+  Controls::SelectorMode checkSelector()
+  {
+    const Controls::SelectorMode currentMode = mControls.readSelector();
+
+    if( currentMode == mLastSelectorMode )
+      return mLastSelectorMode;
+
+    mLastSelectorMode = currentMode;
+    switch( currentMode )
+    {
+      case Controls::SelectorNone:
+      {
+        mMidi.setMode(MidiProxy::SynchroNone);
+        return Controls::SelectorNone;
+      }
+      case Controls::SelectorFirst:
+      {
+        mMidi.setMode(MidiProxy::SynchroClock);
+        mMidi.setBpm(mBpm);
+        return Controls::SelectorFirst;
+      }
+      case Controls::SelectorSecond:
+      {
+        mMidi.setMode(MidiProxy::SynchroMTC);
+        return Controls::SelectorSecond;
+      }
+    }
+    return Controls::SelectorNone;
+  }
+
+  void doButton1Short(const Controls::SelectorMode currentMode)
+  {
+    if( currentMode == Controls::SelectorNone )
+    {
+      mMidi.sendDefaultControlChangeOn(BTN1_SHORT_CC);
+    }
+    else if(mIsPlaying)
+    {
+      mMidi.sendStop();
+      mIsPlaying = false;
+    }
+    else
+    {
+      if( mShouldReset )
+      {
+        mMidi.sendPlay();
+        mShouldReset = false;
+      }
+      else
+        mMidi.sendContinue();
+
+      mIsPlaying = true;
+    }
+  }
+
+  void doButton1Long(const Controls::SelectorMode currentMode)
+  {
+    if( currentMode == Controls::SelectorNone )
+      mMidi.sendDefaultControlChangeOn(BTN1_LONG_CC);
+    else
+    {
+      mMidi.sendStop();
+      mShouldReset = true;
+    }
+  }
+
+  void checkButtons(const Controls::SelectorMode currentMode)
+  {
+    // Controls
+    const Controls::ButtonMode btn1 = mControls.readBtn1();
+    const Controls::ButtonMode btn2 = mControls.readBtn2();
+    const Controls::ButtonMode btn3 = mControls.readBtn3();
+
+    if( btn1 == Controls::ButtonShort )
+    {
+      doButton1Short(currentMode);
+    }
+    else if( btn1 == Controls::ButtonLong )
+    {
+      doButton1Long(currentMode);
+    }
+    else if( btn2 == Controls::ButtonShort )
+    {
+      mMidi.sendDefaultControlChangeOn(BTN2_SHORT_CC);
+    }
+    else if( btn2 == Controls::ButtonLong )
+    {
+      mMidi.sendDefaultControlChangeOn(BTN2_LONG_CC);
+    }
+    else if( btn3 == Controls::ButtonShort )
+    {
+      mMidi.sendDefaultControlChangeOn(BTN3_SHORT_CC);
+    }
+    else if( btn3 == Controls::ButtonLong )
+    {
+      mMidi.sendDefaultControlChangeOn(BTN3_LONG_CC);
+    }
+  }
+
+  void setBpmFromEncoder()
+  {
+    const unsigned long currentTime = millis();
+    const int timeDiff = currentTime - mLastUpdate;
+
+    mBpm = mEncoder.readValue() / 10.0;
+
+    if(mBpm != mOldBpm)
+    {
+      mOldBpm = mBpm;
+
+      mMidi.setBpm(mBpm);
+      mLedDisplay.setNumber(mBpm);
+
+      // Short update: accelerate encoder
+      if(timeDiff <= ACCEL_TIME_DELTA)
+      {
+        // increase rate 0.5 bpm after the other, with a limit of 10
+        mEncoder.setStep( min(mEncoder.getStep() + 5, 100) );
+      }
+      mLastUpdate = currentTime;
+    }
+
+    // No updates in a while: decelerate
+    if(timeDiff > ACCEL_TIME_DELTA)
+    {
+      mEncoder.setStep(1);
+    }
+  }
+
+}; // end of class Application
 
 ////////////////////////// Main program
-Encoder encoder(3, gMinBpm*10, gMaxBpm*10, gBpm*10);
-Controls controls(5, 6, 7, 8, A0);
-Display7Seg ledDisplay(4 /* data */, 10 /* latch */, 9 /* clock */);
-MidiProxy midi;
-
-Controls::SelectorMode checkSelector();
-void checkButtons(const Controls::SelectorMode currentMode);
-
+Application gApp(120.0f /* defaultbpm */, 20 /* minbpm */, 900 /* maxbpm */,
+3 /* encoderpin */, 5 /* btn1 */, 6 /* btn2 */, 7 /* btn3 */,
+8 /* btn4 */, A0 /* selectorpin */, 
+4 /* leddata */, 10 /* ledlatch */, 9 /* ledclock */);
 void setup()
 {
-  // Buttons
-  encoder.setup();
-  controls.setup();
-  ledDisplay.setup();
-  midi.setup();
-  
-  checkSelector();
-
-  gLastUpdate = millis();
+  gApp.setup();
 }
 
 void loop()
 {
-  const Controls::SelectorMode currentMode = checkSelector();
-  
-  setBpmFromEncoder();  
-  checkButtons(currentMode);
-  
-  // Display
-  ledDisplay.display();
+  gApp.loop();
 }
 
-/// Read selector and apply matching sync mode
-Controls::SelectorMode checkSelector()
-{
-  const Controls::SelectorMode currentMode = controls.readSelector();
-  
-  if( currentMode == gLastSelectorMode )
-    return gLastSelectorMode;
-    
-  gLastSelectorMode = currentMode;
-  switch( currentMode )
-  {
-    case Controls::SelectorNone:
-    {
-      midi.setMode(MidiProxy::SynchroNone);
-      return Controls::SelectorNone;
-    }
-    case Controls::SelectorFirst:
-    {
-      midi.setMode(MidiProxy::SynchroClock);
-      midi.setBpm(gBpm);
-      return Controls::SelectorFirst;
-    }
-    case Controls::SelectorSecond:
-    {
-      midi.setMode(MidiProxy::SynchroMTC);
-      return Controls::SelectorSecond;
-    }
-  }
-  return Controls::SelectorNone;
-}
 
-void doButton1Short(const Controls::SelectorMode currentMode)
-{
-  if( currentMode == Controls::SelectorNone )
-  {
-    midi.sendDefaultControlChangeOn(BTN1_SHORT_CC);
-  }
-  else if(gIsPlaying)
-  {
-    midi.sendStop();
-    gIsPlaying = false;
-  }
-  else
-  {
-    if( gShouldReset )
-    {
-      midi.sendPlay();
-      gShouldReset = false;
-    }
-    else
-      midi.sendContinue();
-        
-    gIsPlaying = true;
-  }
-}
 
-void doButton1Long(const Controls::SelectorMode currentMode)
-{
-  if( currentMode == Controls::SelectorNone )
-    midi.sendDefaultControlChangeOn(BTN1_LONG_CC);
-  else
-  {
-    midi.sendStop();
-    gShouldReset = true;
-  }
-}
-
-void checkButtons(const Controls::SelectorMode currentMode)
-{
-  // Controls
-  const Controls::ButtonMode btn1 = controls.readBtn1();
-  const Controls::ButtonMode btn2 = controls.readBtn2();
-  const Controls::ButtonMode btn3 = controls.readBtn3();
-
-  if( btn1 == Controls::ButtonShort )
-  {
-    doButton1Short(currentMode);
-  }
-  else if( btn1 == Controls::ButtonLong )
-  {
-    doButton1Long(currentMode);
-  }
-  else if( btn2 == Controls::ButtonShort )
-  {
-    midi.sendDefaultControlChangeOn(BTN2_SHORT_CC);
-  }
-  else if( btn2 == Controls::ButtonLong )
-  {
-    midi.sendDefaultControlChangeOn(BTN2_LONG_CC);
-  }
-  else if( btn3 == Controls::ButtonShort )
-  {
-    midi.sendDefaultControlChangeOn(BTN3_SHORT_CC);
-  }
-  else if( btn3 == Controls::ButtonLong )
-  {
-    midi.sendDefaultControlChangeOn(BTN3_LONG_CC);
-  }
-}
-
-void setBpmFromEncoder()
-{
-  const unsigned long currentTime = millis();
-  const int timeDiff = currentTime - gLastUpdate;
-  
-  gBpm = encoder.readValue() / 10.0;
-  
-  if(gBpm != gOldBpm)
-  {
-    gOldBpm = gBpm;
-    
-    midi.setBpm(gBpm);
-    ledDisplay.setNumber(gBpm);
-    
-    // Short update: accelerate encoder
-    if(timeDiff <= ACCEL_TIME_DELTA)
-    {
-      // increase rate 0.5 bpm after the other, with a limit of 10
-      encoder.setStep( min(encoder.getStep() + 5, 100) );
-    }
-    gLastUpdate = currentTime;
-  }
-  
-  // No updates in a while: decelerate
-  if(timeDiff > ACCEL_TIME_DELTA)
-  {
-    encoder.setStep(1);
-  }
-}
 
 
