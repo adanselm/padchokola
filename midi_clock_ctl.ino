@@ -1,5 +1,22 @@
 /*                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      /*
- MIDI controller (Time Clock) with rotary encoder, 4 digit 7seg display and footswitches.
+ MidiClockCtl : MIDI controller (Time Clock) with rotary encoder, 4 digit 7seg display and footswitches.
+ Copyright (C) 2013 Adrien Anselme
+
+ This file is part of MidiClockCtl.
+
+ MidiClockCtl is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 2 of the License, or
+ (at your option) any later version.
+
+ MidiClockCtl is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with MidiClockCtl.  If not, see <http://www.gnu.org/licenses/>.
+ -----
  
  The circuit:
  * digital in 1 connected to MIDI jack pin 5
@@ -7,11 +24,7 @@
  * MIDI jack pin 4 connected to +5V through 220-ohm resistor
  * digital pin 2 connected to rotary encoder pin 1 (required for interruption)
  * encoder pin 2 connected to ground
- * encoder pin 3 connected to any digital pin (e.g. digital pin 3)
- 
- created 3 Jun 2013
- by Adrien Anselme
- 
+ * encoder pin 3 connected to any digital pin (e.g. digital pin 3) 
  */
 #include "encoder.h"
 #include "controls.h"
