@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <title>Padchokola by adanselm</title>
+  </head>
+
+  <body>
+    <div id="container">
+      <div class="inner">
+
+        <header>
+          <h1>Padchokola</h1>
+          <h2>MIDI controller with the sense of rhythm</h2>
+        </header>
+
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/adanselm/padchokola/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/adanselm/padchokola/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/adanselm/padchokola" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
+
+        <hr>
+
+        <section id="main_content">
+          <h1>
+<a name="presentation" class="anchor" href="#presentation"><span class="octicon octicon-link"></span></a>Presentation</h1>
+
+<p>Padchokola is an Arduino based Midi controller which comes with some added synchronization capabilities, since it can be set as Midi Clock master or MTC (Midi Time Code) master.</p>
+
+<p><img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/pedal_view.JPG" alt="Overview of the pedal exterior"></p>
+
+<h2>
+<a name="features" class="anchor" href="#features"><span class="octicon octicon-link"></span></a>Features</h2>
+
+<ul>
+<li>3 footswitches, sending different events on short and long hold</li>
+<li>Midi Clock master to control the tempo of your sequencer, looper, drum machine, etc.</li>
+<li>Tap tempo for midi clock mode</li>
+<li>Midi Timecode master to synchronize and control playback on different sources.</li>
+<li>Rotary encoder for tempo setting or to be used as a midi controller as well</li>
+<li>3 positions switch to choose between normal controller mode, midi clock master or MTC master mode.</li>
+<li>4 digit display</li>
+<li>Arduino-based design (fully compatible with Arduino IDE given that you have an external programmer)</li>
+</ul><h2>
+<a name="licensing" class="anchor" href="#licensing"><span class="octicon octicon-link"></span></a>Licensing</h2>
+
+<ul>
+<li>Since the <strong>board design</strong> is based on <a href="http://www.ladyada.net/make/boarduino/">Adafruit's Boarduino</a>, it stays with the <strong>Creative Commons 2.5 - Attribution - Share Alike license</strong>. So does the 7-segment display extension.</li>
+<li>I wrote all the <strong>code</strong> from scratch and decided to put it under <strong>GPLv2</strong>. I started with the Timer1 library to handle interruptions for the midi clock, but it happened to behave strangely at high bpm so I decided to come back to something simpler.</li>
+</ul><h1>
+<a name="make-it" class="anchor" href="#make-it"><span class="octicon octicon-link"></span></a>Make it</h1>
+
+<p>I'm still completing this section. Be patient.</p>
+
+<h2>
+<a name="circuit" class="anchor" href="#circuit"><span class="octicon octicon-link"></span></a>Circuit</h2>
+
+<p>Circuits were drawn using <a href="http://fritzing.org/download/">Fritzing</a> Free software.
+Check out the files with the extension "fzz" in the repository. You can print the circuit from there.</p>
+
+<p>You can also prototype the pedal using an Arduino Uno and do the following circuit:</p>
+
+<ul>
+<li>Footswitch 1, 2 and 3 to digital pins 5, 6 and 7</li>
+<li>Rotary switch (S5) to analog pin 0</li>
+<li>Midi connector:
+
+<ul>
+<li>pin 4 to VCC through a 220 Ohm resistor</li>
+<li>pin 5 to TX (also marked Digital pin 0)</li>
+<li>pin 2 to ground</li>
+</ul>
+</li>
+<li>Rotary encoder pin A to D2, pin B to D3</li>
+<li>7 seg data pin to arduino pin 4, clock pin to pin 9, latch pin to pin 10.</li>
+</ul><p><img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/all_components_assembled.JPG" alt="Before putting it in a case"></p>
+
+<h2>
+<a name="code" class="anchor" href="#code"><span class="octicon octicon-link"></span></a>Code</h2>
+
+<p>Download the code from the top of this page (or click <a href="https://github.com/adanselm/padchokola/zipball/master">here</a> if you're lazy), or from the <a href="https://github.com/adanselm/padchokola">github</a> page, and open it in the Arduino software. If you etched your own PCB from the provided Fritzing files, you'll need an ISP programmer like USBtinyISP or equivalent to push your code to the controller. Burn a bootloader first using "Tools &gt; Burn bootloader" (don't forget to select the kind of programmer you use in the menu just above) if you're using a fresh microcontroller. Then to upload your code, you need to use "File &gt; Upload Using a Programmer".</p>
+
+<p>Don't hesitate to send pull requests to improve the code (or circuit)!</p>
+
+<h2>
+<a name="enclosure" class="anchor" href="#enclosure"><span class="octicon octicon-link"></span></a>Enclosure</h2>
+
+<p><img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/case_drilling.JPG" alt="Drilling a hole in the case"></p>
+
+<h1>
+<a name="how-it-works" class="anchor" href="#how-it-works"><span class="octicon octicon-link"></span></a>How it works</h1>
+
+<p>TODO</p>
+
+<h1>
+<a name="faq" class="anchor" href="#faq"><span class="octicon octicon-link"></span></a>FAQ</h1>
+
+<h2>
+<a name="where-does-the-name-padchokola-come-from" class="anchor" href="#where-does-the-name-padchokola-come-from"><span class="octicon octicon-link"></span></a>Where does the name "Padchokola" come from?</h2>
+
+<p>It is a very famous (and bad) joke made even more famous with the movie <a href="http://www.imdb.com/title/tt1675434/">The Intouchables</a> where the disabled guy asks his assistant for candies, and the assistant answers "No you can't. No arms, no chocolate!". No chocolate being "Pas de chocolat" in French, it became funny to use it to describe a pedal you only need your feet to operate... I told you it was bad!</p>
+
+<h2>
+<a name="who-are-you" class="anchor" href="#who-are-you"><span class="octicon octicon-link"></span></a>Who are you?</h2>
+
+<p>I'm Adrien (<a href="https://github.com/adanselm" class="user-mention">@adanselm</a>), a professional developer. I co-founded a company called <a href="http://springbeats.com">Springbeats</a> which works on music production software. I happened to need a foot controller to record myself playing the guitar. I also added some midi synchronization capabilities to better test our software. I figured it could be useful to others. I sometimes share my thoughts on entrepreneurship, music and software on <a href="https://twitter.com/adanselm">twitter</a> or <a href="https://plus.google.com/u/0/103990689367636425141/posts">google plus</a>.</p>
+        </section>
+
+        <footer>
+          Padchokola is maintained by <a href="https://github.com/adanselm">adanselm</a><br>
+          This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
+
+        
+      </div>
+    </div>
+  </body>
+</html>
