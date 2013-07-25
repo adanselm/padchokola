@@ -50,7 +50,7 @@ public:
   const int btn6Pin, const int btn7Pin, const int selectorPin,
   const int ledDataPin, const int ledLatchPin, const int ledClockPin)
 : 
-    mBpm(defaultBpm), mOldBpm(0.0f), mMinBpm(minBpm), mMaxBpm(maxBpm),
+    mBpm(defaultBpm), mOldBpm(0.0f), mSavedBpm(0.0f), mMinBpm(minBpm), mMaxBpm(maxBpm),
     mLastUpdate(0), mLastSelectorMode(Controls::SelectorNone),
     mIsPlaying(false), mShouldReset(true),
     mEncoder(encoderPin, mMinBpm*10, mMaxBpm*10, mBpm*10),
@@ -72,11 +72,11 @@ public:
     mMidi.setup();
 
     // Read BPM from EEPROM
-    const float savedBpm = recoverBpmFromEeprom();
-    if( savedBpm > 0.0f )
-      mEncoder.setValue( savedBpm * 10.0f) ;
+    mSavedBpm = recoverBpmFromEeprom();
+    if( mSavedBpm > 0.0f )
+      mEncoder.setValue( mSavedBpm * 10.0f) ;
       
-    checkSelector();
+    checkSelector(true);
 
     mLastUpdate = millis();
   }
@@ -85,7 +85,9 @@ public:
   {
     const Controls::SelectorMode currentMode = checkSelector();
 
-    setBpmFromEncoder();  
+    if( currentMode == Controls::SelectorFirst )
+      setBpmFromEncoder();
+      
     checkButtons(currentMode);
 
     // Display
@@ -95,6 +97,7 @@ public:
 private:
   float mBpm;
   float mOldBpm;
+  float mSavedBpm;
   const int mMinBpm;
   const int mMaxBpm;
   unsigned long mLastUpdate;
@@ -135,15 +138,16 @@ private:
   }
 
   /// Read selector and apply matching sync mode
-  Controls::SelectorMode checkSelector()
+  Controls::SelectorMode checkSelector(bool forceRead = false)
   {
     const Controls::SelectorMode currentMode = mControls.readSelector();
 
-    if( currentMode == mLastSelectorMode )
+    if( currentMode == mLastSelectorMode && forceRead == false )
       return mLastSelectorMode;
 
     // Save BPM value in EEPROM
-    if(mLastSelectorMode == Controls::SelectorFirst)
+    if(mLastSelectorMode == Controls::SelectorFirst
+      && areDifferent(mBpm, mSavedBpm)  )
     {
       storeBpmToEeprom(mBpm);
     }
@@ -153,6 +157,7 @@ private:
     {
       case Controls::SelectorNone:
       {
+        mLedDisplay.setup();
         mLedDisplay.setStatusMsg("ctrl");
         mMidi.setMode(MidiProxy::SynchroNone);
         return Controls::SelectorNone;
@@ -178,6 +183,7 @@ private:
   {
     if( currentMode == Controls::SelectorNone )
     {
+      mLedDisplay.setNumber((float)BTN1_SHORT_CC);
       mMidi.sendDefaultControlChangeOn(BTN1_SHORT_CC);
     }
     else if(mIsPlaying)
@@ -202,7 +208,10 @@ private:
   void doButton1Long(const Controls::SelectorMode currentMode)
   {
     if( currentMode == Controls::SelectorNone )
+    {
+      mLedDisplay.setNumber((float)BTN1_LONG_CC);
       mMidi.sendDefaultControlChangeOn(BTN1_LONG_CC);
+    }
     else
     {
       mMidi.sendStop();
@@ -222,7 +231,10 @@ private:
       }
     }
     else
+    {
+      mLedDisplay.setNumber((float)BTN2_SHORT_CC);
       mMidi.sendDefaultControlChangeOn(BTN2_SHORT_CC);
+    }
   }
 
   void checkButtons(const Controls::SelectorMode currentMode)
@@ -246,14 +258,17 @@ private:
     }
     else if( btn2 == Controls::ButtonLong )
     {
+      mLedDisplay.setNumber((float)BTN2_LONG_CC);
       mMidi.sendDefaultControlChangeOn(BTN2_LONG_CC);
     }
     else if( btn3 == Controls::ButtonShort )
     {
+      mLedDisplay.setNumber((float)BTN3_SHORT_CC);
       mMidi.sendDefaultControlChangeOn(BTN3_SHORT_CC);
     }
     else if( btn3 == Controls::ButtonLong )
     {
+      mLedDisplay.setNumber((float)BTN3_LONG_CC);
       mMidi.sendDefaultControlChangeOn(BTN3_LONG_CC);
     }
   }
@@ -291,6 +306,11 @@ private:
     {
       mEncoder.setStep(1);
     }
+  }
+  
+  bool areDifferent(const float f1, const float f2)
+  {
+    return abs(mBpm - mSavedBpm) >= 0.1f;
   }
 
 }; // end of class Application

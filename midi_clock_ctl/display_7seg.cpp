@@ -43,13 +43,16 @@ void Display7Seg::setup()
 
   for( int i = 0; i < NUM_DIGITS; ++i )
   {
-    mLedData[i] = 0;
+    mLedData[i] = -1;
     mMsgData[i] = -1;
   }
 }
 
 void Display7Seg::display()
 {
+  if( mMsgData[mCurrentDigit] < 0 && mLedData[mCurrentDigit] < 0 )
+    return;
+    
   // take the latchPin low so 
   // the LEDs don't change while you're sending in bits:
   digitalWrite(mLatchPin, LOW);
@@ -62,7 +65,7 @@ void Display7Seg::display()
     const int number = mMsgData[mCurrentDigit];
     shiftOut(mDataPin, mClockPin, LSBFIRST, number);
   }
-  else
+  else if( mLedData[mCurrentDigit] >= 0 )
   {
     // put a comma after 3 digits:
     const int number = mCurrentDigit == 2 ? mLedData[mCurrentDigit] | mSeparatorCode
@@ -80,8 +83,8 @@ void Display7Seg::display()
     
   if( mCurrentMsgDuration < MSG_DURATION )
     ++mCurrentMsgDuration;
-  else
-    resetMsg();
+  else if( mLedData[mCurrentDigit] >= 0 ) // Only reset if there is a number to display
+    resetMsg();                         // instead (could happen that there is none right after init)
 }
 
 void Display7Seg::setNumber(const float numberToDisplay)
