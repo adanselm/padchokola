@@ -30,6 +30,7 @@
 #include "controls.h"
 #include "display_7seg.h"
 #include "midi_proxy.h"
+#include <EEPROM.h>
 
 #define ACCEL_TIME_DELTA 200
 
@@ -70,6 +71,11 @@ public:
     mLedDisplay.setup();
     mMidi.setup();
 
+    // Read BPM from EEPROM
+    const float savedBpm = recoverBpmFromEeprom();
+    if( savedBpm > 0.0f )
+      mEncoder.setValue( savedBpm * 10.0f) ;
+      
     checkSelector();
 
     mLastUpdate = millis();
@@ -102,6 +108,32 @@ private:
   MidiProxy mMidi;
 
 private:
+  float recoverBpmFromEeprom() //const
+  {
+    int bpmTen = 0;
+    byte * p = reinterpret_cast<byte *>(&bpmTen);
+    
+    for( int i = 0; i < sizeof(bpmTen); ++i )
+    {
+      *p = EEPROM.read( i );
+      ++p;
+    }
+    return bpmTen / 10.0f; 
+  }
+  
+  void storeBpmToEeprom(const float bpmToStore) const
+  {
+    // Storing BPM*10 as big endian bytes
+    const int bpmTen = static_cast<const int>(bpmToStore) * 10;
+    const byte * p = reinterpret_cast<const byte *>(&bpmTen);
+    
+    for( int i = 0; i < sizeof(bpmTen); ++i )
+    {
+      EEPROM.write( i, *p );
+      ++p;
+    }
+  }
+
   /// Read selector and apply matching sync mode
   Controls::SelectorMode checkSelector()
   {
@@ -110,6 +142,12 @@ private:
     if( currentMode == mLastSelectorMode )
       return mLastSelectorMode;
 
+    // Save BPM value in EEPROM
+    if(mLastSelectorMode == Controls::SelectorFirst)
+    {
+      storeBpmToEeprom(mBpm);
+    }
+    
     mLastSelectorMode = currentMode;
     switch( currentMode )
     {
