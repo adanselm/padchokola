@@ -171,6 +171,21 @@ private:
       mShouldReset = true;
     }
   }
+  
+  void doButton2Short(const Controls::SelectorMode currentMode)
+  {
+    if( currentMode == Controls::SelectorFirst )
+    {
+      const float newBpm = mMidi.tapTempo();
+      if( newBpm > 0.0f )
+      {
+        // Change bpm via encoder value or it will be overwritten by loop()
+        mEncoder.setValue(newBpm * 10);
+      }
+    }
+    else
+      mMidi.sendDefaultControlChangeOn(BTN2_SHORT_CC);
+  }
 
   void checkButtons(const Controls::SelectorMode currentMode)
   {
@@ -189,7 +204,7 @@ private:
     }
     else if( btn2 == Controls::ButtonShort )
     {
-      mMidi.sendDefaultControlChangeOn(BTN2_SHORT_CC);
+      doButton2Short(currentMode);
     }
     else if( btn2 == Controls::ButtonLong )
     {
@@ -207,10 +222,15 @@ private:
 
   void setBpmFromEncoder()
   {
+    setBpm(mEncoder.readValue() / 10.0);
+  }
+  
+  void setBpm(const float newBpm)
+  {
     const unsigned long currentTime = millis();
     const int timeDiff = currentTime - mLastUpdate;
 
-    mBpm = mEncoder.readValue() / 10.0;
+    mBpm = newBpm;
 
     if(mBpm != mOldBpm)
     {

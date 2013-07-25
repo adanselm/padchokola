@@ -19,6 +19,80 @@
 */
 #include "midi_proxy.h"
 
+// Allow 3 sec between taps at max (eq. to 20BPM)
+#define TAP_TIMEOUT_MS 3000
+
+///////////////////////////////////// TapTempo
+TapTempo::TapTempo()
+{
+  reset();
+}
+  
+TapTempo::~TapTempo()
+{
+}
+
+void TapTempo::reset()
+{
+  mLastTap = 0;
+  mCurrentReadingPos = 0;
+  for( int i = 0; i < TAP_NUM_READINGS; ++i )
+  {
+    mReadings[i] = 0.0f;
+  }
+}
+
+float TapTempo::tap()
+{
+  const unsigned long currentTime = millis(); 
+  if( mLastTap > 0 )
+  {
+    if( timeout(currentTime) )
+      reset();
+    
+    mReadings[ mCurrentReadingPos % TAP_NUM_READINGS ] = calcBpmFromTime(currentTime);
+    ++mCurrentReadingPos;
+    
+    if( mCurrentReadingPos >= 2 )
+    {
+      mLastTap = currentTime;
+      return computeAverage(); // Enough readings to compute average
+    }
+  }
+  
+  mLastTap = currentTime;
+  return 0.0f;
+}
+
+bool TapTempo::timeout(const unsigned long currentTime) const
+{
+  if( (currentTime - mLastTap) > TAP_TIMEOUT_MS)
+    return true;
+    
+  return false;
+}
+
+float TapTempo::calcBpmFromTime(unsigned long currentTime) const
+{
+  if( mLastTap == 0 || currentTime <= mLastTap )
+    return 0.0f;
+  
+  const float msInAMinute = 1000 * 60.0;
+  return msInAMinute / (currentTime - mLastTap);
+}
+
+float TapTempo::computeAverage() const
+{
+  float sum = 0.0f;
+  const int count = min(mCurrentReadingPos, TAP_NUM_READINGS);
+  for( int i = 0; i < count; ++i )
+  {
+    sum += mReadings[i];
+  }
+  return sum / count;
+}
+
+///////////////////////////////////// MidiProxy
 MidiProxy::MidiProxy()
 {
 }
@@ -188,14 +262,23 @@ void MidiProxy::setBpm(const float iBpm)
   }
 }
 
+const float MidiProxy::tapTempo()
+{
+  if( getMode() == SynchroClock )
+  {
+    return mTapTempo.tap();
+  }
+  return 0.0f;
+}
+
 void MidiProxy::setTimer(const double frequency)
 {
-  if(frequency > 244.16f) //610.4f) // First value with cmp_match < 65536 (thus allowing to decrease prescaler for higher precision)
+  if(frequency > 244.16f) // First value with cmp_match < 65536 (thus allowing to decrease prescaler for higher precision)
   {
     mPrescaler = 1;
     mSelectBits = (1 << CS10);
   }
-  else if(frequency > 30.52f) //76.3f) // First value with cmp_match < 65536
+  else if(frequency > 30.52f) // First value with cmp_match < 65536
   {
     mPrescaler = 8;
     mSelectBits = (1 << CS11);

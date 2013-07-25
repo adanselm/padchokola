@@ -50,6 +50,13 @@ const unsigned int Encoder::readValue() const
   return temp;
 }
 
+void Encoder::setValue(const unsigned int newValue)
+{
+  noInterrupts(); // Ensures interrupt doesn't happen while reading the value
+  mEncoderPos = newValue;
+  interrupts();
+}
+
 const unsigned int Encoder::getMinVal() const
 {
   return mMinVal;

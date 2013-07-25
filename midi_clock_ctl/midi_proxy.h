@@ -22,6 +22,31 @@
 
 #include <Arduino.h>
 
+// TAP_NUM_READINGS doesn't mean we have to wait for this many samples
+// to change BPM, just that smoothing operates on this value.
+#define TAP_NUM_READINGS 5
+
+/////////////////////////////////////
+class TapTempo
+{
+public:
+  TapTempo();
+  ~TapTempo();
+
+  float tap();
+  void reset();
+  
+private:
+  int mCurrentReadingPos;
+  float mReadings[TAP_NUM_READINGS];
+  unsigned long mLastTap;
+  
+  bool timeout(const unsigned long currentTime) const;
+  float calcBpmFromTime(unsigned long currentTime) const;
+  float computeAverage() const;
+};
+
+/////////////////////////////////////
 class MidiProxy
 {
 public:
@@ -40,6 +65,7 @@ public:
 
   // Only active in Midi Clock mode
   void setBpm(const float iBpm);
+  const float tapTempo();
 
   static void setMode(MidiSynchro newMode);
   static MidiSynchro getMode();
@@ -117,6 +143,7 @@ private:
   static MidiSynchro mMode;
   
   // Midi Clock Stuff
+  TapTempo mTapTempo;
   static const int mMidiClockPpqn;
   static volatile unsigned long mEventTime;
   static volatile MidiType mNextEvent;

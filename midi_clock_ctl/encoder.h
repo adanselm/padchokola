@@ -29,6 +29,7 @@ class Encoder
 
     void setup();
     const unsigned int readValue() const;
+    void setValue(const unsigned int newValue);
 
     const unsigned int getMinVal() const;
     const unsigned int getMaxVal() const;
