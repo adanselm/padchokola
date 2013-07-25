@@ -27,18 +27,19 @@
 #define LONG_PRESS 1500
 
 Controls::Controls(const int btn1Pin, const int btn2Pin, const int btn3Pin,
-                   const int /* unusedPin */, const int selectorPin)
+                   const int btn4Pin, const int btn5Pin, const int btn6Pin,
+                   const int btn7Pin, const int selectorPin)
 : mSelectorPin(selectorPin)
 {
   mBtnPin[0] = btn1Pin;
   mBtnPin[1] = btn2Pin;
   mBtnPin[2] = btn3Pin;
-  mCounter[0] = 0;
-  mCounter[1] = 0;
-  mCounter[2] = 0;
-  mLastKeyPressTime[0] = 0;
-  mLastKeyPressTime[1] = 0;
-  mLastKeyPressTime[2] = 0;
+  
+  for( int i = 0; i < CONTROLS_BTN_COUNT; ++i )
+  {
+    mCounter[i] = 0;
+    mLastKeyPressTime[i] = 0;
+  }
 }
 
 Controls::~Controls() {
@@ -46,26 +47,16 @@ Controls::~Controls() {
 
 void Controls::setup()
 {
-  for( int i = 0; i < 3; ++i )
+  for( int i = 0; i < CONTROLS_BTN_COUNT; ++i )
   {
     pinMode(mBtnPin[i], INPUT);
     digitalWrite(mBtnPin[i], HIGH);  // turn on internal pull-up
   }
 }
 
-const Controls::ButtonMode Controls::readBtn1()
+const Controls::ButtonMode Controls::readBtn(const int btnNumber)
 {
-  return readPinFiltered(0);
-}
-
-const Controls::ButtonMode Controls::readBtn2()
-{
-  return readPinFiltered(1);
-}
-
-const Controls::ButtonMode Controls::readBtn3()
-{
-  return readPinFiltered(2);
+  return readPinFiltered(btnNumber - 1);
 }
 
 const Controls::SelectorMode Controls::readSelector()

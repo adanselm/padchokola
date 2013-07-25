@@ -20,6 +20,8 @@
 #ifndef _MIDI_CLOCK_CTL_CONTROLS_H_
 #define _MIDI_CLOCK_CTL_CONTROLS_H_
 
+#define CONTROLS_BTN_COUNT 7
+
 /////////////////// Buttons stuff
 class Controls
 {
@@ -39,14 +41,14 @@ class Controls
   };
 
   Controls(const int btn1Pin, const int btn2Pin, const int btn3Pin,
-           const int /* unusedPin */, const int selectorPin);
+           const int btn4Pin, const int btn5Pin, const int btn6Pin,
+           const int btn7Pin, const int selectorPin);
   ~Controls();
   
   void setup();
   
-  const ButtonMode readBtn1();
-  const ButtonMode readBtn2();
-  const ButtonMode readBtn3();
+  /* Read button btnNumber (starting from 1) */
+  const ButtonMode readBtn(const int btnNumber);
   const SelectorMode readSelector();
 
  private:
@@ -54,10 +56,10 @@ class Controls
   const int readPinDuration(const int btnIndex);
   
  private:
-  int mBtnPin[3];
+  int mBtnPin[CONTROLS_BTN_COUNT];
   const int mSelectorPin;
-  int mCounter[3];
-  unsigned long mLastKeyPressTime[3];
+  int mCounter[CONTROLS_BTN_COUNT];
+  unsigned long mLastKeyPressTime[CONTROLS_BTN_COUNT];
 };
 
 #endif

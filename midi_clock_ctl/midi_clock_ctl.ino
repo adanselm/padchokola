@@ -45,14 +45,15 @@ class Application
 public:
   Application(const float defaultBpm, const float minBpm, const float maxBpm,
   const int encoderPin, const int btn1Pin, const int btn2Pin,
-  const int btn3Pin, const int btn4Pin, const int selectorPin,
+  const int btn3Pin, const int btn4Pin, const int btn5Pin,
+  const int btn6Pin, const int btn7Pin, const int selectorPin,
   const int ledDataPin, const int ledLatchPin, const int ledClockPin)
 : 
     mBpm(defaultBpm), mOldBpm(0.0f), mMinBpm(minBpm), mMaxBpm(maxBpm),
     mLastUpdate(0), mLastSelectorMode(Controls::SelectorNone),
     mIsPlaying(false), mShouldReset(true),
     mEncoder(encoderPin, mMinBpm*10, mMaxBpm*10, mBpm*10),
-    mControls(btn1Pin, btn2Pin, btn3Pin, btn4Pin, selectorPin),
+    mControls(btn1Pin, btn2Pin, btn3Pin, btn4Pin, btn5Pin, btn6Pin, btn7Pin, selectorPin),
     mLedDisplay(ledDataPin, ledLatchPin, ledClockPin)
     {
     }
@@ -171,9 +172,9 @@ private:
   void checkButtons(const Controls::SelectorMode currentMode)
   {
     // Controls
-    const Controls::ButtonMode btn1 = mControls.readBtn1();
-    const Controls::ButtonMode btn2 = mControls.readBtn2();
-    const Controls::ButtonMode btn3 = mControls.readBtn3();
+    const Controls::ButtonMode btn1 = mControls.readBtn(1);
+    const Controls::ButtonMode btn2 = mControls.readBtn(2);
+    const Controls::ButtonMode btn3 = mControls.readBtn(3);
 
     if( btn1 == Controls::ButtonShort )
     {
@@ -236,7 +237,7 @@ private:
 ////////////////////////// Main program
 Application gApp(120.0f /* defaultbpm */, 20 /* minbpm */, 900 /* maxbpm */,
 3 /* encoderpin */, 5 /* btn1 */, 6 /* btn2 */, 7 /* btn3 */,
-8 /* btn4 */, A0 /* selectorpin */, 
+8 /* btn4 */, A2 /* btn5 */, A3 /* btn6 */, A4 /* btn7 */, A0 /* selectorpin */, 
 4 /* leddata */, 10 /* ledlatch */, 9 /* ledclock */);
 void setup()
 {
