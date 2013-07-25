@@ -115,17 +115,20 @@ private:
     {
       case Controls::SelectorNone:
       {
+        mLedDisplay.setStatusMsg("ctrl");
         mMidi.setMode(MidiProxy::SynchroNone);
         return Controls::SelectorNone;
       }
       case Controls::SelectorFirst:
       {
+        mLedDisplay.setStatusMsg("cloc");
         mMidi.setMode(MidiProxy::SynchroClock);
         mMidi.setBpm(mBpm);
         return Controls::SelectorFirst;
       }
       case Controls::SelectorSecond:
       {
+        mLedDisplay.setStatusMsg("mtco");
         mMidi.setMode(MidiProxy::SynchroMTC);
         return Controls::SelectorSecond;
       }

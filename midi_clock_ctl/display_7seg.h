@@ -39,17 +39,26 @@ class Display7Seg
   void setNumber(const float numberToDisplay);
   void setNumber(const unsigned int numberToDisplay);
   
+  /// Can display momentaneous 4 letters msg instead of number
+  /// \param[in] msg has to be lowercase ascii. Expected to be of size NUM_DIGITS
+  /// \See mLettersCodes for supported letters 
+  void setStatusMsg(const char* msg);
+  
  private:
   void setNumber(const byte digit1, const byte digit2, const byte digit3, const byte digit4);
+  void resetMsg();
   
  private:
   const int mDataPin;
   const int mLatchPin; /* ST_CP of 74HC595 */
   const int mClockPin; /* SH_CP of 74HC595 */
   byte mCurrentDigit;
-  byte mDigits[NUM_DIGITS];
+  int mCurrentMsgDuration;
+  int mLedData[NUM_DIGITS];
+  int mMsgData[NUM_DIGITS];
   
   static const int mNumbersCodes[10];
+  static const int mLettersCodes[26];
   static const int mDigitsCodes[NUM_DIGITS];
   static const int mSeparatorCode;
 };
