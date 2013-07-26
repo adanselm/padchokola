@@ -20,14 +20,14 @@
 #include "encoder.h"
 #include "Arduino.h"
 
-Encoder::Encoder(const int encoderPinB, const unsigned int minValue, const unsigned int maxValue, const unsigned int defaultValue)
+Encoder::Encoder(const int encoderPinB)
 {
-  staticInit(encoderPinB, minValue, maxValue, 1, defaultValue);
+  staticInit(encoderPinB, 1);
 }
 
 Encoder::~Encoder() {}
 
-void Encoder::setup()
+void Encoder::setup(const unsigned int minValue, const unsigned int maxValue, const unsigned int defaultValue)
 {
   pinMode(mEncoderPinA, INPUT);
   pinMode(mEncoderPinB, INPUT);
@@ -37,6 +37,9 @@ void Encoder::setup()
   attachInterrupt(1, Encoder::doEncoder, CHANGE); // encoder pin on interrupt 1 (pin 3)
   
   val1 = val2 = oldVal1 = oldVal2 = pos = oldPos = turn = oldTurn = turnCount = 0;
+  mMinVal = minValue;
+  mMaxVal = maxValue;
+  mEncoderPos = defaultValue;
 }
 
 const unsigned int Encoder::readValue() const
@@ -122,33 +125,21 @@ void Encoder::doEncoder()
 }
 
 // PinA is fixed to 2 to be able to use interrupt
-void Encoder::staticInit(const int encoderPinB, const unsigned int minValue, const unsigned int maxValue,
-                         const int stepVal, const unsigned int defaultVal)
+void Encoder::staticInit(const int encoderPinB, const int stepVal)
 {
   mEncoderPinA = 2;
   mEncoderPinB = encoderPinB;
-  mMinVal = minValue;
-  mMaxVal = maxValue;
   mStep = stepVal;
-  mEncoderPos = defaultVal;
 }
 
 void Encoder::inc(volatile unsigned int & value, volatile int & stepVal)
 {
   value = min(mMaxVal, value + stepVal);
-//  if( mMaxVal - value >= stepVal )
-//    value += stepVal;
-//  else
-//    value = mMinVal + stepVal - (mMaxVal - value) - 1;
 }
 
 void Encoder::dec(volatile unsigned int & value, volatile int & stepVal)
 {
   value = max(mMinVal, value - stepVal);
-//  if( value - mMinVal >= stepVal )
-//    value -= stepVal;
-//  else
-//    value = mMaxVal - stepVal + value - mMinVal + 1;
 }
 
 unsigned int Encoder::mMinVal = 0;

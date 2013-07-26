@@ -44,16 +44,15 @@
 class Application
 {
 public:
-  Application(const float defaultBpm, const float minBpm, const float maxBpm,
-  const int encoderPin, const int btn1Pin, const int btn2Pin,
-  const int btn3Pin, const int btn4Pin, const int btn5Pin,
-  const int btn6Pin, const int btn7Pin, const int selectorPin,
-  const int ledDataPin, const int ledLatchPin, const int ledClockPin)
-: 
-    mBpm(defaultBpm), mOldBpm(0.0f), mSavedBpm(0.0f), mMinBpm(minBpm), mMaxBpm(maxBpm),
+  Application(const float defaultBpm, const int encoderPin, const int btn1Pin, const int btn2Pin,
+              const int btn3Pin, const int btn4Pin, const int btn5Pin,
+              const int btn6Pin, const int btn7Pin, const int selectorPin,
+              const int ledDataPin, const int ledLatchPin, const int ledClockPin)
+  : 
+    mBpm(defaultBpm), mOldBpm(0.0f), mSavedBpm(0.0f),
     mLastUpdate(0), mLastSelectorMode(Controls::SelectorNone),
     mIsPlaying(false), mShouldReset(true), mOldPosition(0),
-    mEncoder(encoderPin, mMinBpm*10, mMaxBpm*10, mBpm*10),
+    mEncoder(encoderPin),
     mControls(btn1Pin, btn2Pin, btn3Pin, btn4Pin, btn5Pin, btn6Pin, btn7Pin, selectorPin),
     mLedDisplay(ledDataPin, ledLatchPin, ledClockPin)
     {
@@ -66,7 +65,6 @@ public:
   void setup()
   {
     // Buttons
-    mEncoder.setup();
     mControls.setup();
     mLedDisplay.setup();
     mMidi.setup();
@@ -75,7 +73,8 @@ public:
     mSavedBpm = recoverBpmFromEeprom();
     if( mSavedBpm > 0.0f )
       mEncoder.setValue( mSavedBpm * 10.0f) ;
-      
+    
+    // Encoder setup is done in checkSelector
     checkSelector(true);
 
     mLastUpdate = millis();
@@ -100,8 +99,6 @@ private:
   float mBpm;
   float mOldBpm;
   float mSavedBpm;
-  const int mMinBpm;
-  const int mMaxBpm;
   unsigned long mLastUpdate;
   Controls::SelectorMode mLastSelectorMode;
   bool mIsPlaying;
@@ -160,6 +157,7 @@ private:
     {
       case Controls::SelectorNone:
       {
+        mEncoder.setup(0, 127, 0);
         mLedDisplay.setup();
         mLedDisplay.setStatusMsg("ctrl");
         mMidi.setMode(MidiProxy::SynchroNone);
@@ -167,6 +165,7 @@ private:
       }
       case Controls::SelectorFirst:
       {
+        mEncoder.setup(20*10 /* minbpm */, 900*10 /* maxbpm */, 120*10 /* defaultbpm */);
         mLedDisplay.setStatusMsg("cloc");
         mMidi.setMode(MidiProxy::SynchroClock);
         mMidi.setBpm(mBpm);
@@ -174,6 +173,7 @@ private:
       }
       case Controls::SelectorSecond:
       {
+        mEncoder.setup(0, 9999, 0);
         mLedDisplay.setStatusMsg("mtco");
         mMidi.sendStop();
         mMidi.setMode(MidiProxy::SynchroMTC);
@@ -311,14 +311,34 @@ private:
   
   void setPositionFromEncoder()
   {
-     const unsigned int pos = mEncoder.readValue();
+    const unsigned long currentTime = millis();
+    const int timeDiff = currentTime - mLastUpdate;
+    
+    const unsigned int pos = mEncoder.readValue();
 
     if(pos != mOldPosition)
     {
       mOldPosition = pos;
 
-      mMidi.sendPosition(0, 0, pos % 60, 0);
+      const unsigned int mins = pos / 60;
+      const byte hours = mins / 60;
+      const byte secs = pos % 60;
+      mMidi.sendPosition(hours, mins % 60, secs, 0);
       mLedDisplay.setNumber(pos/10.0f);
+      
+      // Short update: accelerate encoder
+      if(timeDiff <= ACCEL_TIME_DELTA)
+      {
+        // increase rate 0.5 bpm after the other, with a limit of 10
+        mEncoder.setStep( min(mEncoder.getStep() + 5, 100) );
+      }
+      mLastUpdate = currentTime;
+    }
+
+    // No updates in a while: decelerate
+    if(timeDiff > ACCEL_TIME_DELTA)
+    {
+      mEncoder.setStep(1);
     }
   }
   
@@ -330,10 +350,10 @@ private:
 }; // end of class Application
 
 ////////////////////////// Main program
-Application gApp(120.0f /* defaultbpm */, 20 /* minbpm */, 900 /* maxbpm */,
-3 /* encoderpin */, 5 /* btn1 */, 6 /* btn2 */, 7 /* btn3 */,
-8 /* btn4 */, A2 /* btn5 */, A3 /* btn6 */, A4 /* btn7 */, A0 /* selectorpin */, 
-4 /* leddata */, 10 /* ledlatch */, 9 /* ledclock */);
+Application gApp(120.0f /* defaultbpm */, 3 /* encoderpin */,
+                 5 /* btn1 */, 6 /* btn2 */, 7 /* btn3 */,
+                 8 /* btn4 */, A2 /* btn5 */, A3 /* btn6 */, A4 /* btn7 */, A0 /* selectorpin */, 
+                 4 /* leddata */, 10 /* ledlatch */, 9 /* ledclock */);
 void setup()
 {
   gApp.setup();

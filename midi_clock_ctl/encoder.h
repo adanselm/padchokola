@@ -24,10 +24,10 @@
 class Encoder
 {
   public:
-    Encoder(const int encoderPinB, const unsigned int minValue, const unsigned int maxValue, const unsigned int defaultValue);
+    Encoder(const int encoderPinB);
     ~Encoder();
 
-    void setup();
+    void setup(const unsigned int minValue, const unsigned int maxValue, const unsigned int defaultValue);
     const unsigned int readValue() const;
     void setValue(const unsigned int newValue);
 
@@ -41,8 +41,7 @@ class Encoder
     
   private:
     // PinA is fixed to 2 to be able to use interrupt
-    void staticInit(const int encoderPinB, const unsigned int minValue, const unsigned int maxValue,
-                    const int stepVal, const unsigned int defaultVal);
+    void staticInit(const int encoderPinB, const int stepVal);
     static void inc(volatile unsigned int & value, volatile int & stepVal);
     static void dec(volatile unsigned int & value, volatile int & stepVal);
 
