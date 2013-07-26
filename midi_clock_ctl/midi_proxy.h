@@ -84,6 +84,7 @@ public:
   
   /** Sends a CC on channel 1, with a value of 127 */
   void sendDefaultControlChangeOn(byte cc);
+  void sendProgramChange(byte channel, byte program);
   
   static void doSendMidiClock();
   static void doSendMTC();

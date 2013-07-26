@@ -51,7 +51,7 @@ public:
   : 
     mBpm(defaultBpm), mOldBpm(0.0f), mSavedBpm(0.0f),
     mLastUpdate(0), mLastSelectorMode(Controls::SelectorNone),
-    mIsPlaying(false), mShouldReset(true), mOldPosition(0),
+    mIsPlaying(false), mShouldReset(true), mOldPosition(0), mOldProgram(0),
     mEncoder(encoderPin),
     mControls(btn1Pin, btn2Pin, btn3Pin, btn4Pin, btn5Pin, btn6Pin, btn7Pin, selectorPin),
     mLedDisplay(ledDataPin, ledLatchPin, ledClockPin)
@@ -88,6 +88,8 @@ public:
       setBpmFromEncoder();
     else if( currentMode == Controls::SelectorSecond )
       setPositionFromEncoder();
+    else
+      setCurrentProgramFromEncoder();
       
     checkButtons(currentMode);
 
@@ -104,6 +106,7 @@ private:
   bool mIsPlaying;
   bool mShouldReset;
   unsigned int mOldPosition;
+  byte mOldProgram;
   //
   Encoder mEncoder;
   Controls mControls;
@@ -339,6 +342,19 @@ private:
     if(timeDiff > ACCEL_TIME_DELTA)
     {
       mEncoder.setStep(1);
+    }
+  }
+  
+  void setCurrentProgramFromEncoder()
+  {
+     const byte program = (mEncoder.readValue() & 0x000f);
+
+    if(program != mOldProgram)
+    {
+      mOldProgram = program;
+
+      mMidi.sendProgramChange( 1, program ); // Send on channel one
+      mLedDisplay.setNumber( (float)program );
     }
   }
   

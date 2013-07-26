@@ -268,6 +268,12 @@ void MidiProxy::sendDefaultControlChangeOn(byte cc)
   sendControlChange(1, cc, 127);
 }
 
+void MidiProxy::sendProgramChange(byte channel, byte value)
+{
+  Serial.write( ProgramChange | ((channel - 1) & 0x0f) );
+  Serial.write(value & 0x7F);
+}
+
 // To be called every two frames (so once a complete cycle of quarter frame messages have passed)
 void MidiProxy::updatePlayhead()
 {
