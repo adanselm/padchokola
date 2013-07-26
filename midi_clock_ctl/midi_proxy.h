@@ -66,13 +66,21 @@ public:
   // Only active in Midi Clock mode
   void setBpm(const float iBpm);
   const float tapTempo();
+  //
 
   static void setMode(MidiSynchro newMode);
   static MidiSynchro getMode();
   
+  // Only active in clock and MTC :
   void sendPlay();
   void sendStop();
   void sendContinue();
+  bool isPlaying() const;
+  //
+  
+  // Only active in MTC :
+  void sendPosition(byte hours, byte minutes, byte seconds, byte frames);
+  //
   
   /** Sends a CC on channel 1, with a value of 127 */
   void sendDefaultControlChangeOn(byte cc);
@@ -134,8 +142,10 @@ private:
   
 private:
   static void sendMTCQuarterFrame(int index);
+  static void sendMTCFullFrame();
   static void updatePlayhead();
   static void resetPlayhead();
+  static void setPlayhead(byte hours, byte minutes, byte seconds, byte frames);
   static void setTimer(const double frequency);
   void sendControlChange(byte channel, byte cc, byte value);
   

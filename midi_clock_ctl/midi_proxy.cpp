@@ -152,12 +152,34 @@ void MidiProxy::sendContinue()
   interrupts();
 }
 
+void MidiProxy::sendPosition(byte hours, byte minutes, byte seconds, byte frames)
+{
+  noInterrupts();
+  setPlayhead(hours, minutes, seconds, frames);
+  mNextEvent = SongPosition;
+  interrupts();
+}
+
+bool MidiProxy::isPlaying() const
+{
+  return (mNextEvent == Continue) || (mNextEvent == Start);
+}
+
 void MidiProxy::doSendMTC()
 {  
+  if( mNextEvent == SongPosition)
+  {
+    sendMTCFullFrame();
+    mNextEvent = Stop;
+    return;
+  }   
   if( mNextEvent != Stop )
   {
     if( mNextEvent == Start)
+    {
       resetPlayhead();
+      mNextEvent = Continue;
+    }
       
     sendMTCQuarterFrame(mCurrentQFrame);
     mCurrentQFrame = (mCurrentQFrame + 1) % 8;
@@ -220,6 +242,20 @@ void MidiProxy::sendMTCQuarterFrame(int index)
   Serial.write( mMTCQuarterFrameTypes[index] | MTCData );
 }
 
+void MidiProxy::sendMTCFullFrame()
+{
+  /// F0 7F cc 01 01 hr mn sc fr F7
+  // cc -> channel (0x7f to broadcast)
+  // hr -> hour, mn -> minutes, sc -> seconds, fr -> frames
+  static byte header[5] = { 0xf0, 0x7f, 0x7f, 0x01, 0x01 };
+  Serial.write(header, 5);
+  Serial.write(mPlayhead.hours);
+  Serial.write(mPlayhead.minutes);
+  Serial.write(mPlayhead.seconds);
+  Serial.write(mPlayhead.frames);
+  Serial.write(0xf7);
+}
+
 void MidiProxy::sendControlChange(byte channel, byte cc, byte value)
 {
   Serial.write(ControlChange | ((channel - 1) & 0x0F));
@@ -251,6 +287,14 @@ void MidiProxy::resetPlayhead()
   mPlayhead.seconds = 0;
   mPlayhead.minutes = 0;
   mPlayhead.hours = 0;
+}
+
+void MidiProxy::setPlayhead(byte hours, byte minutes, byte seconds, byte frames)
+{
+  mPlayhead.frames = frames;
+  mPlayhead.seconds = seconds;
+  mPlayhead.minutes = minutes;
+  mPlayhead.hours = hours;
 }
 
 void MidiProxy::setBpm(const float iBpm)

@@ -52,7 +52,7 @@ public:
 : 
     mBpm(defaultBpm), mOldBpm(0.0f), mSavedBpm(0.0f), mMinBpm(minBpm), mMaxBpm(maxBpm),
     mLastUpdate(0), mLastSelectorMode(Controls::SelectorNone),
-    mIsPlaying(false), mShouldReset(true),
+    mIsPlaying(false), mShouldReset(true), mOldPosition(0),
     mEncoder(encoderPin, mMinBpm*10, mMaxBpm*10, mBpm*10),
     mControls(btn1Pin, btn2Pin, btn3Pin, btn4Pin, btn5Pin, btn6Pin, btn7Pin, selectorPin),
     mLedDisplay(ledDataPin, ledLatchPin, ledClockPin)
@@ -87,6 +87,8 @@ public:
 
     if( currentMode == Controls::SelectorFirst )
       setBpmFromEncoder();
+    else if( currentMode == Controls::SelectorSecond )
+      setPositionFromEncoder();
       
     checkButtons(currentMode);
 
@@ -104,6 +106,7 @@ private:
   Controls::SelectorMode mLastSelectorMode;
   bool mIsPlaying;
   bool mShouldReset;
+  unsigned int mOldPosition;
   //
   Encoder mEncoder;
   Controls mControls;
@@ -172,6 +175,7 @@ private:
       case Controls::SelectorSecond:
       {
         mLedDisplay.setStatusMsg("mtco");
+        mMidi.sendStop();
         mMidi.setMode(MidiProxy::SynchroMTC);
         return Controls::SelectorSecond;
       }
@@ -186,10 +190,9 @@ private:
       mLedDisplay.setNumber((float)BTN1_SHORT_CC);
       mMidi.sendDefaultControlChangeOn(BTN1_SHORT_CC);
     }
-    else if(mIsPlaying)
+    else if( mMidi.isPlaying() )
     {
       mMidi.sendStop();
-      mIsPlaying = false;
     }
     else
     {
@@ -200,8 +203,6 @@ private:
       }
       else
         mMidi.sendContinue();
-
-      mIsPlaying = true;
     }
   }
 
@@ -305,6 +306,19 @@ private:
     if(timeDiff > ACCEL_TIME_DELTA)
     {
       mEncoder.setStep(1);
+    }
+  }
+  
+  void setPositionFromEncoder()
+  {
+     const unsigned int pos = mEncoder.readValue();
+
+    if(pos != mOldPosition)
+    {
+      mOldPosition = pos;
+
+      mMidi.sendPosition(0, 0, pos % 60, 0);
+      mLedDisplay.setNumber(pos/10.0f);
     }
   }
   
