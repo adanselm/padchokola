@@ -34,7 +34,8 @@
           <h1>
 <a name="presentation" class="anchor" href="#presentation"><span class="octicon octicon-link"></span></a>Presentation</h1>
 
-<p>Padchokola is an Arduino based Midi controller which comes with some added synchronization capabilities, since it can be set as Midi Clock master or MTC (Midi Time Code) master.</p>
+<p>Padchokola is an Arduino based Midi controller which comes with some added synchronization capabilities, since it can be set as Midi Clock master or MTC (Midi Time Code) master.
+You can do it yourself either from scratch using the plans and informations here, or by buying the kits on <a href="http://ardamat.com">my web store ardamat.com</a>.</p>
 
 <p><img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/pedal_view.JPG" alt="Overview of the pedal exterior"></p>
 
@@ -46,8 +47,8 @@
 <li>Midi Clock master to control the tempo of your sequencer, looper, drum machine, etc.</li>
 <li>Tap tempo for midi clock mode</li>
 <li>Midi Timecode master to synchronize and control playback on different sources.</li>
-<li>Rotary encoder for tempo setting or to be used as a midi controller as well</li>
-<li>3 positions switch to choose between normal controller mode, midi clock master or MTC master mode.</li>
+<li>Rotary encoder for tempo setting (in midi clock mode), position in song in seconds (in MTC mode) or midi program change in default CC mode</li>
+<li>3 positions switch to choose between normal controller (CC) mode, midi clock master or MTC master mode.</li>
 <li>4 digit display</li>
 <li>Arduino-based design (fully compatible with Arduino IDE given that you have an external programmer)</li>
 </ul><h2>
@@ -59,7 +60,99 @@
 </ul><h1>
 <a name="make-it" class="anchor" href="#make-it"><span class="octicon octicon-link"></span></a>Make it</h1>
 
-<p>I'm still completing this section. Be patient.</p>
+<p>You can buy the kit from my webshop: <a href="http://ardamat.com">ardamat.com</a></p>
+
+<h2>
+<a name="parts-list-for-the-whole-pedal-with-sync-and-display-and-3-switches" class="anchor" href="#parts-list-for-the-whole-pedal-with-sync-and-display-and-3-switches"><span class="octicon octicon-link"></span></a>Parts list for the whole pedal (with sync and display and 3 switches)</h2>
+
+<ul>
+<li>The 2 circuit boards</li>
+<li>1x rotary switch with 3 positions (for the 3 modes)</li>
+<li>2x Knobs to cover the switch and encoder</li>
+<li>1x rotary encoder that you can mount on a panel</li>
+<li>2x shift registers 74HC595</li>
+<li>1x 7 segment display, 4 digit Kingbright CC56-12EWA (common cathode)</li>
+<li>2x Transistor BC547A/B/C</li>
+<li>3x Foot switches SPDT or more complex if you know how to wire them</li>
+<li>3x Ceramic capacitor 0.1uf, 6.3V</li>
+<li>2x Ceramic capacitor 22pf, 6.3V</li>
+<li>1x Electrolytic Capacitor 10µF; voltage 25V</li>
+<li>1x Electrolytic Capacitor 100µF; voltage 6.3V</li>
+<li>1x Rectifier Diode 1N4001</li>
+<li>1x Green LED - 3mm</li>
+<li>1x Red LED - 3mm</li>
+<li>1x 2.1mm DC Barrel Jack</li>
+<li>1x Generic double row male header - 6 pins</li>
+<li>1x generic single row male header - 5 pins</li>
+<li>1x generic single row female header - 5 pins</li>
+<li>1x Atmega328-20PU micro controller</li>
+<li>1x 28pin socket</li>
+<li>1x Voltage Regulator 7805CV - 5V TO220</li>
+<li>1x DIN-5 jack (MIDI). Latest revisions of the board are drilled for a SDS50-J</li>
+<li>1x 10k Ω Resistor</li>
+<li>2x 1k Ω Resistor</li>
+<li>3x 220 Ω Resistor (1 for the main board, 2 to solder on the rotary switch)</li>
+<li>1x Subminiature switch KRS0611</li>
+<li>1x 16Mhz Crystal</li>
+</ul><h2>
+<a name="soldering-of-the-main-board" class="anchor" href="#soldering-of-the-main-board"><span class="octicon octicon-link"></span></a>Soldering of the main board</h2>
+
+<p>The bare circuit board:
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/main_build_1.jpg" alt="The bare circuit board"></p>
+
+<p>Here I soldered the Midi connector and display female connectors on the bottom right.
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/main_build_2.JPG" alt="soldered the Midi connector and display"></p>
+
+<p>Then the first part of the power supply stage: the DC connector, the diode (with the ring mark towards the top), the 100uF electrolytic capacitor at the bottom (minus sign on the bottom), and a 0.1uF ceramic capacitor right above it.
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/main_build_3.JPG" alt="first part of the power supply"></p>
+
+<p>Second part of the power supply, from left to right: 7805CV voltage regulator (with the metal part facing left, so that we can make it touch the aluminium case later for a better heat diffusion), 0.1uF ceramic capacitor, 10uF electrolytic capacitor (minus sign on top), green LED (short leg on the left), 1kOhm resistor. Now if you plug your power supply, you should see the (green) light. If not, check your soldering joints and the voltages with a multimeter.
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/main_build_4.JPG" alt="Second part of the power supply"></p>
+
+<p>Now the easiest part: solder the other connectors (ICSP and main chip), and the remaining resistors (from top to bottom: R3 = 1kOhm, R1 = 10kOhm and R4 = 220Ohm).
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/main_build_5.JPG" alt="Overview of the pedal exterior"></p>
+
+<p>You're almost done now: solder the quartz oscillator and its two 22pF capacitors. All these have no polarity. It's important to solder the chip socket BEFORE the 10kOhm resistor and 22pF capacitors, because they're quite close to each other and it's easier to do it this way.
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/main_build_6.JPG" alt="solder the quartz oscillator"></p>
+
+<p>Here is the board, almost complete. I just soldered the red LED (short leg on top), micro switch, and remaining 0.1uF capacitor (C2).</p>
+
+<p>What's left to solder are the wires for the various foot switches (S1 to S4 and S6 to S8), encoder (ENC) and mode switch (S5), that you'll all mount on the panel of your enclosure. So pick an appropriate wire length and start soldering them. You can also fit the micro controller in its socket. Careful with the orientation of the chip: the little mark on the chip should be oriented left, just like the socket, so that pin number 1 is the one at the bottom left corner.
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/main_build_7.JPG" alt="Here is the board, almost complete"></p>
+
+<h2>
+<a name="soldering-of-the-display-board" class="anchor" href="#soldering-of-the-display-board"><span class="octicon octicon-link"></span></a>Soldering of the display board</h2>
+
+<p>After the main board, the display extension is a piece of cake!
+Here is the naked board.
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/disp_build_1.JPG" alt="Here is the display board"></p>
+
+<p>Start by soldering the male header on the other side of the board. This will allow us to connect the circuit to the main board very easily.
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/disp_build_2.JPG" alt="Start by soldering the male header"></p>
+
+<p>Then the 4 transistors.
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/disp_build_3.JPG" alt="Then the 4 transistors"></p>
+
+<p>The shift registers, oriented left (look at the half-circle mark).
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/disp_build_4.JPG" alt="The shift registers"></p>
+
+<p>Now the first tricky part: put an M3 screw in the hole at the bottom right corner...
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/disp_build_5.JPG" alt="put an M3 screw in the hole at the bottom right corner"></p>
+
+<p>... and tighten a bolt on the other side. We will see why this is needed in the next section.
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/disp_build_6.JPG" alt="tighten a bolt on the other side"></p>
+
+<p>Now the second tricky part: <strong>rotate the board upside down</strong> before soldering the display!
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/disp_build_7.JPG" alt="soldering the display"></p>
+
+<h2>
+<a name="assembly" class="anchor" href="#assembly"><span class="octicon octicon-link"></span></a>Assembly</h2>
+
+<p>If you did your homework well, your display board should fit right on top of the main board.
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/assembly_build_1.JPG" alt="soldering the display"></p>
+
+<p>Connect the male and female (DISP) headers on the two boards. The screw we placed earlier aligns itself with a hole in the center of the main board. You can use other bolts here to tighten this up.
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/assembly_build_2.JPG" alt="soldering the display"></p>
 
 <h2>
 <a name="circuit" class="anchor" href="#circuit"><span class="octicon octicon-link"></span></a>Circuit</h2>
