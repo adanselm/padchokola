@@ -101,58 +101,58 @@ You can do it yourself either from scratch using the plans and informations here
 <img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/main_build_1.jpg" alt="The bare circuit board"></p>
 
 <p>Here I soldered the Midi connector and display female connectors on the bottom right.
-<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/main_build_2.JPG" alt="soldered the Midi connector and display"></p>
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/main_build_2.jpg" alt="soldered the Midi connector and display"></p>
 
 <p>Then the first part of the power supply stage: the DC connector, the diode (with the ring mark towards the top), the 100uF electrolytic capacitor at the bottom (minus sign on the bottom), and a 0.1uF ceramic capacitor right above it.
-<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/main_build_3.JPG" alt="first part of the power supply"></p>
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/main_build_3.jpg" alt="first part of the power supply"></p>
 
 <p>Second part of the power supply, from left to right: 7805CV voltage regulator (with the metal part facing left, so that we can make it touch the aluminium case later for a better heat diffusion), 0.1uF ceramic capacitor, 10uF electrolytic capacitor (minus sign on top), green LED (short leg on the left), 1kOhm resistor. Now if you plug your power supply, you should see the (green) light. If not, check your soldering joints and the voltages with a multimeter.
-<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/main_build_4.JPG" alt="Second part of the power supply"></p>
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/main_build_4.jpg" alt="Second part of the power supply"></p>
 
 <p>Now the easiest part: solder the other connectors (ICSP and main chip), and the remaining resistors (from top to bottom: R3 = 1kOhm, R1 = 10kOhm and R4 = 220Ohm).
-<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/main_build_5.JPG" alt="Overview of the pedal exterior"></p>
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/main_build_5.jpg" alt="Overview of the pedal exterior"></p>
 
 <p>You're almost done now: solder the quartz oscillator and its two 22pF capacitors. All these have no polarity. It's important to solder the chip socket BEFORE the 10kOhm resistor and 22pF capacitors, because they're quite close to each other and it's easier to do it this way.
-<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/main_build_6.JPG" alt="solder the quartz oscillator"></p>
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/main_build_6.jpg" alt="solder the quartz oscillator"></p>
 
 <p>Here is the board, almost complete. I just soldered the red LED (short leg on top), micro switch, and remaining 0.1uF capacitor (C2).</p>
 
 <p>What's left to solder are the wires for the various foot switches (S1 to S4 and S6 to S8), encoder (ENC) and mode switch (S5), that you'll all mount on the panel of your enclosure. So pick an appropriate wire length and start soldering them. You can also fit the micro controller in its socket. Careful with the orientation of the chip: the little mark on the chip should be oriented left, just like the socket, so that pin number 1 is the one at the bottom left corner.
-<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/main_build_7.JPG" alt="Here is the board, almost complete"></p>
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/main_build_7.jpg" alt="Here is the board, almost complete"></p>
 
 <h2>
 <a name="soldering-of-the-display-board" class="anchor" href="#soldering-of-the-display-board"><span class="octicon octicon-link"></span></a>Soldering of the display board</h2>
 
 <p>After the main board, the display extension is a piece of cake!
 Here is the naked board.
-<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/disp_build_1.JPG" alt="Here is the display board"></p>
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/disp_build_1.jpg" alt="Here is the display board"></p>
 
 <p>Start by soldering the male header on the other side of the board. This will allow us to connect the circuit to the main board very easily.
-<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/disp_build_2.JPG" alt="Start by soldering the male header"></p>
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/disp_build_2.jpg" alt="Start by soldering the male header"></p>
 
 <p>Then the 4 transistors.
-<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/disp_build_3.JPG" alt="Then the 4 transistors"></p>
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/disp_build_3.jpg" alt="Then the 4 transistors"></p>
 
 <p>The shift registers, oriented left (look at the half-circle mark).
-<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/disp_build_4.JPG" alt="The shift registers"></p>
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/disp_build_4.jpg" alt="The shift registers"></p>
 
 <p>Now the first tricky part: put an M3 screw in the hole at the bottom right corner...
-<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/disp_build_5.JPG" alt="put an M3 screw in the hole at the bottom right corner"></p>
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/disp_build_5.jpg" alt="put an M3 screw in the hole at the bottom right corner"></p>
 
 <p>... and tighten a bolt on the other side. We will see why this is needed in the next section.
-<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/disp_build_6.JPG" alt="tighten a bolt on the other side"></p>
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/disp_build_6.jpg" alt="tighten a bolt on the other side"></p>
 
 <p>Now the second tricky part: <strong>rotate the board upside down</strong> before soldering the display!
-<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/disp_build_7.JPG" alt="soldering the display"></p>
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/disp_build_7.jpg" alt="soldering the display"></p>
 
 <h2>
 <a name="assembly" class="anchor" href="#assembly"><span class="octicon octicon-link"></span></a>Assembly</h2>
 
 <p>If you did your homework well, your display board should fit right on top of the main board.
-<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/assembly_build_1.JPG" alt="soldering the display"></p>
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/assembly_build_1.jpg" alt="soldering the display"></p>
 
 <p>Connect the male and female (DISP) headers on the two boards. The screw we placed earlier aligns itself with a hole in the center of the main board. You can use other bolts here to tighten this up.
-<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/assembly_build_2.JPG" alt="soldering the display"></p>
+<img src="https://raw.github.com/adanselm/padchokola/gh-pages/images/assembly_build_2.jpg" alt="soldering the display"></p>
 
 <h2>
 <a name="circuit" class="anchor" href="#circuit"><span class="octicon octicon-link"></span></a>Circuit</h2>
